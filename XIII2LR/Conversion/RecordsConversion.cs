@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using WDBJsonTool.Support;
 using WDBJsonTool.Extensions;
+using WDBJsonTool.Common;
 
 namespace WDBJsonTool.XIII2LR.Conversion;
 internal class RecordsConversion
@@ -164,7 +165,7 @@ internal class RecordsConversion
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
-                    case 0:
+                    case (int)WdbFieldType.Bitpacked:
                         int iTypeDataVal;
                         uint uTypeDataVal;
                         int fTypeDataVal;
@@ -351,7 +352,7 @@ internal class RecordsConversion
                         break;
 
                     // float value
-                    case 1:
+                    case (int)WdbFieldType.Float:
                         var floatVal = Convert.ToSingle(recordData.Value[f]);
                         Log.Debug($"{wdbVars.Fields[f]}: {floatVal}");
 
@@ -367,7 +368,7 @@ internal class RecordsConversion
                         break;
 
                     // string section offset
-                    case 2:
+                    case (int)WdbFieldType.String:
                         var stringVal = recordData.Value[f].ToString();
                         Log.Debug($"{wdbVars.Fields[f]}: {stringVal}");
 
@@ -398,7 +399,7 @@ internal class RecordsConversion
                         break;
 
                     // uint value
-                    case 3:
+                    case (int)WdbFieldType.UInt:
                         var uintVal = Convert.ToUInt32(recordData.Value[f]);
                         Log.Debug($"{wdbVars.Fields[f]}: {uintVal}");
 

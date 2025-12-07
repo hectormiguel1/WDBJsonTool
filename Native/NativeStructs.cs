@@ -1,16 +1,7 @@
 using System.Runtime.InteropServices;
+using WDBJsonTool.Common;
 
 namespace WDBJsonTool.Native;
-/// <summary>
-/// Field value types matching the WDB strtypelist values
-/// </summary>
-public enum WdbFieldType : int
-{
-    Bitpacked = 0,
-    Float = 1,
-    String = 2,
-    UInt = 3
-}
 
 /// <summary>
 /// A single field value that can hold different types

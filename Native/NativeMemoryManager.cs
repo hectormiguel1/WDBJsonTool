@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using WDBJsonTool.Common;
 
 namespace WDBJsonTool.Native;
 /// <summary>

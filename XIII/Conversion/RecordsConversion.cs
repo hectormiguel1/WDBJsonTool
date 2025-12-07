@@ -1,4 +1,5 @@
 using System.Text;
+using WDBJsonTool.Common;
 using WDBJsonTool.Extensions;
 using WDBJsonTool.Support;
 
@@ -29,7 +30,7 @@ internal class RecordsConversion
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
-                    case 0:
+                    case (int)WdbFieldType.Bitpacked:
                         int iTypeDataVal;
                         uint uTypeDataVal;
                         int fTypeDataVal;
@@ -178,7 +179,7 @@ internal class RecordsConversion
                         break;
 
                     // float value
-                    case 1:
+                    case (int)WdbFieldType.Float:
                         var floatVal = Convert.ToSingle(recordData.Value[f]);
                         Log.Debug($"{wdbVars.Fields[f]}: {floatVal}");
 
@@ -194,7 +195,7 @@ internal class RecordsConversion
                         break;
 
                     // string section offset
-                    case 2:
+                    case (int)WdbFieldType.String:
                         var stringVal = recordData.Value[f].ToString();
                         Log.Debug($"{wdbVars.Fields[f]}: {stringVal}");
 
@@ -225,7 +226,7 @@ internal class RecordsConversion
                         break;
 
                     // uint value
-                    case 3:
+                    case (int)WdbFieldType.UInt:
                         if (wdbVars.Fields[f].StartsWith("u64"))
                         {
                             var ulongVal = Convert.ToUInt64(recordData.Value[f]);
@@ -297,7 +298,7 @@ internal class RecordsConversion
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
-                    case 0:
+                    case (int)WdbFieldType.Bitpacked:
                         var bitpackedBinary = (string)recordData.Value[f];
                         Log.Debug($"bitpacked-field_{bitpackedFieldCounter}: {bitpackedBinary}");
 
@@ -315,7 +316,7 @@ internal class RecordsConversion
 
 
                     // float value
-                    case 1:
+                    case (int)WdbFieldType.Float:
                         var floatVal = Convert.ToSingle(recordData.Value[f]);
                         Log.Debug($"float-field_{floatFieldCounter}: {floatVal}");
 
@@ -333,7 +334,7 @@ internal class RecordsConversion
 
 
                     // string section offset
-                    case 2:
+                    case (int)WdbFieldType.String:
                         var stringVal = recordData.Value[f].ToString();
                         Log.Debug($"!!string-field_{stringFieldCounter}: {stringVal}");
 
@@ -366,7 +367,7 @@ internal class RecordsConversion
 
 
                     // uint value
-                    case 3:
+                    case (int)WdbFieldType.UInt:
                         var uintVal = Convert.ToUInt32(recordData.Value[f]);
                         Log.Debug($"uint-field_{uintFieldCounter}: {uintVal}");
 

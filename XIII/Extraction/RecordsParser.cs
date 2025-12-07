@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using WDBJsonTool.Support;
 using WDBJsonTool.Extensions;
+using WDBJsonTool.Common;
 
 namespace WDBJsonTool.XIII.Extraction;
 internal class RecordsParser
@@ -33,7 +34,7 @@ internal class RecordsParser
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
-                    case 0:
+                    case (int)WdbFieldType.Bitpacked:
                         var binaryData = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true).UIntToBinary();
                         var binaryDataIndex = binaryData.Length;
                         var fieldBitsToProcess = 32;
@@ -161,7 +162,7 @@ internal class RecordsParser
                         break;
 
                     // float value
-                    case 1:
+                    case (int)WdbFieldType.Float:
                         var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
                         Log.Debug($"{wdbVars.Fields[f]}: {floatDataVal}");
@@ -172,7 +173,7 @@ internal class RecordsParser
                         break;
 
                     // !!string section offset
-                    case 2:
+                    case (int)WdbFieldType.String:
                         var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                         var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
@@ -184,7 +185,7 @@ internal class RecordsParser
                         break;
 
                     // uint value
-                    case 3:
+                    case (int)WdbFieldType.UInt:
                         if (wdbVars.Fields[f].StartsWith("u64"))
                         {
                             var processArray = new byte[8];
@@ -257,7 +258,7 @@ internal class RecordsParser
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
-                    case 0:
+                    case (int)WdbFieldType.Bitpacked:
                         var bitpackedData = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                         var hexDataVal = "0x" + bitpackedData.ToString("X").PadLeft(8, '0');
 
@@ -270,7 +271,7 @@ internal class RecordsParser
                         break;
 
                     // float value
-                    case 1:
+                    case (int)WdbFieldType.Float:
                         var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
                         Log.Debug($"float-field_{floatFieldCounter}: {floatDataVal}");
@@ -282,7 +283,7 @@ internal class RecordsParser
                         break;
 
                     // !!string section offset
-                    case 2:
+                    case (int)WdbFieldType.String:
                         var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                         var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
@@ -295,7 +296,7 @@ internal class RecordsParser
                         break;
 
                     // uint value
-                    case 3:
+                    case (int)WdbFieldType.UInt:
                         var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
                         Log.Debug($"uint-field_{uintFieldCounter}: {uintDataVal}");
