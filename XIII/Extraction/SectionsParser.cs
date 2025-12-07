@@ -103,11 +103,7 @@ namespace WDBJsonTool.XIII.Extraction
                 wdbVars.SheetName = WDBDicts.RecordIDs[wdbVars.WDBName];
                 jsonWriter.WriteString(wdbVars.SheetNameSectionName, wdbVars.SheetName);
 
-                Console.WriteLine("");
-                Console.WriteLine("");
-                Console.WriteLine($"sheetName: {wdbVars.SheetName}");
-                Console.WriteLine("");
-                Console.WriteLine("");
+                Log.Info($"sheetName: {wdbVars.SheetName}");
 
                 wdbVars.FieldCount = (uint)WDBDicts.FieldNames[wdbVars.SheetName].Count;
                 wdbVars.Fields = new string[wdbVars.FieldCount];

@@ -9,9 +9,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
 
         public static void ConvertRecordsStrArray(WDBVariablesXIII2LR wdbVars)
         {
-            Console.WriteLine("Building strArray....");
-            Console.WriteLine("");
-            Thread.Sleep(1000);
+            Log.Info("Building strArray....");
 
             foreach (var recordData in wdbVars.RecordsDataDict)
             {
@@ -144,9 +142,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
 
         private static void WriteFieldValuesForRecords(WDBVariablesXIII2LR wdbVars, uint stringPos)
         {
-            Console.WriteLine("Building records....");
-            Console.WriteLine("");
-            Thread.Sleep(1000);
+            Log.Info("Building records....");
 
             var outPerRecordSize = wdbVars.StrtypelistValues.Count * 4;
 
@@ -154,7 +150,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
             {
                 var currentOutData = new byte[outPerRecordSize];
 
-                Console.WriteLine($"Record: {recordData.Key}");
+                Log.Debug($"Record: {recordData.Key}");
 
                 var dataIndex = 0;
                 var strtypelistIndex = 0;
@@ -190,7 +186,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                                             SharedMethods.ValidateInt(fieldNum, ref iTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {iTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {iTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -233,7 +229,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                                             SharedMethods.ValidateUInt(fieldNum, ref uTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -269,7 +265,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                                             SharedMethods.ValidateInt(fieldNum, ref fTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -313,7 +309,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                                             SharedMethods.ValidateUInt(fieldNum, ref sTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {stringItem} | Index: {sTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {stringItem} | Index: {sTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -357,7 +353,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                         // float value
                         case 1:
                             var floatVal = Convert.ToSingle(recordData.Value[f]);
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {floatVal}");
+                            Log.Debug($"{wdbVars.Fields[f]}: {floatVal}");
 
                             var floatValBytes = BitConverter.GetBytes(floatVal);
 
@@ -373,7 +369,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                         // string section offset
                         case 2:
                             var stringVal = recordData.Value[f].ToString();
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {stringVal}");
+                            Log.Debug($"{wdbVars.Fields[f]}: {stringVal}");
 
                             if (stringVal != "")
                             {
@@ -404,7 +400,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                         // uint value
                         case 3:
                             var uintVal = Convert.ToUInt32(recordData.Value[f]);
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {uintVal}");
+                            Log.Debug($"{wdbVars.Fields[f]}: {uintVal}");
 
                             var uintValBytes = BitConverter.GetBytes(uintVal);
 
@@ -419,8 +415,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                     }
                 }
 
-                Console.WriteLine("");
-                wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
+                                wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
             }
         }
     }

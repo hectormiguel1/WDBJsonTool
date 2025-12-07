@@ -23,11 +23,9 @@ namespace WDBJsonTool.XIII2LR.Extraction
             wdbVars.BitsPerOffset = wdbReader.ReadByte();
             wdbVars.RecordCount--;
 
-            Console.WriteLine("[StrArray]");
-            Console.WriteLine($"Offsets per value: {wdbVars.OffsetsPerValue}");
-            Console.WriteLine($"Bits per offset: {wdbVars.BitsPerOffset}");
-            Console.WriteLine("");
-
+            Log.Info("[StrArray]");
+            Log.Debug($"Offsets per value: {wdbVars.OffsetsPerValue}");
+            Log.Debug($"Bits per offset: {wdbVars.BitsPerOffset}");
 
             // !!strArrayList
             _ = wdbReader.BaseStream.Position = readPos + 64;
@@ -167,7 +165,7 @@ namespace WDBJsonTool.XIII2LR.Extraction
                 }
             }
 
-            Console.WriteLine($"Finished organizing {wdbVars.StrArraySectionName}");
+            Log.Info($"Finished organizing {wdbVars.StrArraySectionName}");
         }
     }
 }

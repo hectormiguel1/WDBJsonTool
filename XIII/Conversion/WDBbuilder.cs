@@ -6,9 +6,7 @@ namespace WDBJsonTool.XIII.Conversion
     {
         public static void BuildWDB(WDBVariablesXIII wdbVars)
         {
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Building wdb file....");
+            Log.Info("Building wdb file....");
 
             if (File.Exists(wdbVars.WDBFilePath))
             {

@@ -18,12 +18,10 @@ namespace WDBJsonTool.XIII.Conversion
             var jsonReader = new Utf8JsonReader(jsonData, options);
             _ = jsonReader.Read();
 
-            Console.WriteLine("Deserializing main sections....");
-            Console.WriteLine("");
+            Log.Info("Deserializing main sections....");
             DeserializeMainSections(ref jsonReader, wdbVars);
 
-            Console.WriteLine("Deserializing records....");
-            Console.WriteLine("");
+            Log.Info("Deserializing records....");
             DeserializeRecords(ref jsonReader, wdbVars);
         }
 

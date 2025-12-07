@@ -15,7 +15,7 @@ namespace WDBJsonTool.XIII.Conversion
             {
                 var currentOutData = new byte[outPerRecordSize];
 
-                Console.WriteLine($"Record: {recordData.Key}");
+                Log.Debug($"Record: {recordData.Key}");
 
                 var dataIndex = 0;
                 var strtypelistIndex = 0;
@@ -50,7 +50,7 @@ namespace WDBJsonTool.XIII.Conversion
                                             SharedMethods.ValidateInt(fieldNum, ref iTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {iTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {iTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -93,7 +93,7 @@ namespace WDBJsonTool.XIII.Conversion
                                             SharedMethods.ValidateUInt(fieldNum, ref uTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -129,7 +129,7 @@ namespace WDBJsonTool.XIII.Conversion
                                             SharedMethods.ValidateInt(fieldNum, ref fTypeDataVal);
                                         }
 
-                                        Console.WriteLine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                        Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
 
                                         if (fieldNum == 0)
                                         {
@@ -180,7 +180,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // float value
                         case 1:
                             var floatVal = Convert.ToSingle(recordData.Value[f]);
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {floatVal}");
+                            Log.Debug($"{wdbVars.Fields[f]}: {floatVal}");
 
                             var floatValBytes = BitConverter.GetBytes(floatVal);
 
@@ -196,7 +196,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // string section offset
                         case 2:
                             var stringVal = recordData.Value[f].ToString();
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {stringVal}");
+                            Log.Debug($"{wdbVars.Fields[f]}: {stringVal}");
 
                             if (stringVal != "")
                             {
@@ -229,7 +229,7 @@ namespace WDBJsonTool.XIII.Conversion
                             if (wdbVars.Fields[f].StartsWith("u64"))
                             {
                                 var ulongVal = Convert.ToUInt64(recordData.Value[f]);
-                                Console.WriteLine($"{wdbVars.Fields[f]}: {ulongVal}");
+                                Log.Debug($"{wdbVars.Fields[f]}: {ulongVal}");
 
                                 var ulongValBytes = BitConverter.GetBytes(ulongVal);
 
@@ -248,7 +248,7 @@ namespace WDBJsonTool.XIII.Conversion
                             else
                             {
                                 var uintVal = Convert.ToUInt32(recordData.Value[f]);
-                                Console.WriteLine($"{wdbVars.Fields[f]}: {uintVal}");
+                                Log.Debug($"{wdbVars.Fields[f]}: {uintVal}");
 
                                 var uintValBytes = BitConverter.GetBytes(uintVal);
 
@@ -264,8 +264,7 @@ namespace WDBJsonTool.XIII.Conversion
                     }
                 }
 
-                Console.WriteLine("");
-
+                
                 wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
             }
         }
@@ -281,7 +280,7 @@ namespace WDBJsonTool.XIII.Conversion
             {
                 var currentOutData = new byte[outPerRecordSize];
 
-                Console.WriteLine($"Record: {recordData.Key}");
+                Log.Debug($"Record: {recordData.Key}");
 
                 var dataIndex = 0;
                 var strtypelistIndex = 0;
@@ -300,7 +299,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // bitpacked
                         case 0:
                             var bitpackedBinary = (string)recordData.Value[f];
-                            Console.WriteLine($"bitpacked-field_{bitpackedFieldCounter}: {bitpackedBinary}");
+                            Log.Debug($"bitpacked-field_{bitpackedFieldCounter}: {bitpackedBinary}");
 
                             var bitpackedBinaryBytes = BitConverter.GetBytes(Convert.ToUInt32(bitpackedBinary.Substring(2), 16));
 
@@ -318,7 +317,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // float value
                         case 1:
                             var floatVal = Convert.ToSingle(recordData.Value[f]);
-                            Console.WriteLine($"float-field_{floatFieldCounter}: {floatVal}");
+                            Log.Debug($"float-field_{floatFieldCounter}: {floatVal}");
 
                             var floatValBytes = BitConverter.GetBytes(floatVal);
 
@@ -336,7 +335,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // string section offset
                         case 2:
                             var stringVal = recordData.Value[f].ToString();
-                            Console.WriteLine($"!!string-field_{stringFieldCounter}: {stringVal}");
+                            Log.Debug($"!!string-field_{stringFieldCounter}: {stringVal}");
 
                             if (stringVal != "")
                             {
@@ -369,7 +368,7 @@ namespace WDBJsonTool.XIII.Conversion
                         // uint value
                         case 3:
                             var uintVal = Convert.ToUInt32(recordData.Value[f]);
-                            Console.WriteLine($"uint-field_{uintFieldCounter}: {uintVal}");
+                            Log.Debug($"uint-field_{uintFieldCounter}: {uintVal}");
 
                             var uintValBytes = BitConverter.GetBytes(uintVal);
 
@@ -385,8 +384,7 @@ namespace WDBJsonTool.XIII.Conversion
                     }
                 }
 
-                Console.WriteLine("");
-
+                
                 wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
             }
         }

@@ -119,12 +119,7 @@ namespace WDBJsonTool.XIII2LR.Extraction
                 wdbVars.SheetName = "Not Specified";
             }
 
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
-            Console.WriteLine("");
-            Console.WriteLine("");
-
+            Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
 
             // Process !structitem data
             wdbVars.Fields = new string[wdbVars.FieldCount];
@@ -149,12 +144,9 @@ namespace WDBJsonTool.XIII2LR.Extraction
             // data
             if (wdbVars.HasStrArraySection)
             {
-                Console.WriteLine($"Organizing {wdbVars.StrArraySectionName} data....");
+                Log.Info($"Organizing {wdbVars.StrArraySectionName} data....");
 
                 StrArrayParser.ArrangeArrayData(wdbVars);
-
-                Console.WriteLine("");
-                Console.WriteLine("");
             }
         }
 

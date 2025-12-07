@@ -6,9 +6,8 @@ namespace WDBJsonTool.Support
     {
         public static void ErrorExit(string errorMsg)
         {
-            Console.WriteLine($"Error: {errorMsg}");
-            Console.ReadLine();
-            Environment.Exit(1);
+            Log.Error(errorMsg);
+            throw new InvalidOperationException(errorMsg);
         }
 
 
@@ -191,7 +190,7 @@ namespace WDBJsonTool.Support
 
             if (value > maxValue)
             {
-                Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
+                Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
                 value = 0;
             }
         }
@@ -208,7 +207,7 @@ namespace WDBJsonTool.Support
 
                 if (newValue != value)
                 {
-                    Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
+                    Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
                     value = 0;
                 }
             }
@@ -218,7 +217,7 @@ namespace WDBJsonTool.Support
 
                 if (value > maxValue)
                 {
-                    Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
+                    Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
                     value = 0;
                 }
             }

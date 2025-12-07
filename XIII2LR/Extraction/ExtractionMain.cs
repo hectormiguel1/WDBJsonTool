@@ -1,21 +1,17 @@
 ﻿using System.Text.Json;
 using WDBJsonTool.Support;
 
-namespace WDBJsonTool.XIII.Extraction
+namespace WDBJsonTool.XIII2LR.Extraction
 {
     internal class ExtractionMain
     {
-        public static void StartExtraction(string inWDBfile, bool shouldIgnoreKnown)
+        public static void StartExtraction(string inWDBfile)
         {
-            var wdbVars = new WDBVariablesXIII
-            {
-                IgnoreKnown = shouldIgnoreKnown
-            };
+            var wdbVars = new WDBVariablesXIII2LR();
 
-            using (var wdbReader = new BinaryReader(File.Open(inWDBfile, FileMode.Open, FileAccess.Read)))
+            using (var wdbReader = new BinaryReader(File.Open(inWDBfile, FileMode.Open, FileAccess.Read, FileShare.Read)))
             {
-                wdbVars.WDBName = Path.GetFileNameWithoutExtension(inWDBfile);
-                wdbVars.JsonFilePath = Path.Combine(Path.GetDirectoryName(inWDBfile), wdbVars.WDBName + ".json");
+                wdbVars.JsonFilePath = Path.Combine(Path.GetDirectoryName(inWDBfile), Path.GetFileNameWithoutExtension(inWDBfile) + ".json");
 
                 _ = wdbReader.BaseStream.Position = 0;
                 if (wdbReader.ReadBytesString(3, false) != "WPD")
@@ -33,10 +29,9 @@ namespace WDBJsonTool.XIII.Extraction
 
                 SectionsParser.MainSections(wdbReader, wdbVars);
 
-                Console.WriteLine("");
-                Console.WriteLine($"Total records: {wdbVars.RecordCount}");
-                Console.WriteLine("");
+                Log.Info($"Total records: {wdbVars.RecordCount}");
 
+                Log.Info("Parsing records....");
 
                 using (var jsonStream = new MemoryStream())
                 {
@@ -51,26 +46,12 @@ namespace WDBJsonTool.XIII.Extraction
                         jsonWriter.WriteStartObject();
 
                         SectionsParser.MainSectionsToJson(wdbVars, jsonWriter);
-
-                        Console.WriteLine("Parsing records....");
-                        Console.WriteLine("");
-                        Thread.Sleep(1000);
-
-                        if (wdbVars.IsKnown)
-                        {
-                            RecordsParser.ParseRecordsWithFields(wdbReader, wdbVars, jsonWriter);
-                        }
-                        else
-                        {
-                            RecordsParser.ParseRecordsWithoutFields(wdbReader, wdbVars, jsonWriter);
-                        }
+                        RecordsParser.ProcessRecords(wdbReader, wdbVars, jsonWriter);
 
                         jsonWriter.WriteEndObject();
                     }
 
-                    Console.WriteLine("");
-                    Console.WriteLine("");
-                    Console.WriteLine("Writing wdb data to json file....");
+                    Log.Info("Writing wdb data to json file....");
 
                     if (File.Exists(wdbVars.JsonFilePath))
                     {
@@ -82,9 +63,7 @@ namespace WDBJsonTool.XIII.Extraction
                 }
             }
 
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Finished extracting wdb data to json file");
+            Log.Info("Finished extracting wdb data to json file");
         }
     }
 }
