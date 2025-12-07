@@ -96,7 +96,7 @@ public class BitpackedFieldProcessor : IBitpackedFieldProcessor
                 throw new InvalidOperationException($"Missing value for field '{fieldName}'");
             }
 
-            string fieldBinary = fieldType switch
+            var fieldBinary = fieldType switch
             {
                 'i' => PackSignedInt(Convert.ToInt32(fieldValue), fieldNum),
                 'u' => Convert.ToUInt32(fieldValue).UIntToBinaryFixed(fieldNum),
@@ -121,7 +121,7 @@ public class BitpackedFieldProcessor : IBitpackedFieldProcessor
     /// <summary>
     /// Packs a signed integer, handling negative values correctly.
     /// </summary>
-    private string PackSignedInt(int value, int bitWidth)
+    private static string PackSignedInt(int value, int bitWidth)
     {
         var binary = value.IntToBinaryFixed(bitWidth);
 
@@ -137,7 +137,7 @@ public class BitpackedFieldProcessor : IBitpackedFieldProcessor
     /// <summary>
     /// Reads a packed 32-bit value from binary data.
     /// </summary>
-    public uint ReadPackedValue(ReadOnlySpan<byte> data, int offset)
+    public static uint ReadPackedValue(ReadOnlySpan<byte> data, int offset)
     {
         return BinaryPrimitives.ReadUInt32BigEndian(data.Slice(offset, 4));
     }

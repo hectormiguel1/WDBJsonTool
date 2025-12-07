@@ -184,7 +184,7 @@ public static class RecordConversionHelper
             return currentStringPos; // No change to position
         }
 
-        if (!processedStringsDict.ContainsKey(stringValue))
+        if (!processedStringsDict.TryGetValue(stringValue, out var value))
         {
             processedStringsDict.Add(stringValue, currentStringPos);
             WriteUInt32Value(outputArray, offset, currentStringPos);
@@ -192,7 +192,7 @@ public static class RecordConversionHelper
         }
         else
         {
-            WriteUInt32Value(outputArray, offset, processedStringsDict[stringValue]);
+            WriteUInt32Value(outputArray, offset, value);
             return currentStringPos; // No change to position
         }
     }

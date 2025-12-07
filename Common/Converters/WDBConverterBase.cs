@@ -10,15 +10,15 @@ namespace WDBJsonTool.Common.Converters;
 /// </summary>
 public abstract class WDBConverterBase<TVariables> where TVariables : WDBVariablesBase
 {
-    protected const string WPD_MAGIC = "WPD";
-    protected const byte WPD_VERSION = 0x04;
+    private const string WPD_MAGIC = "WPD";
+    private const byte WPD_VERSION = 0x04;
 
     /// <summary>
     /// Main conversion method that orchestrates the building process.
     /// </summary>
     /// <param name="jsonFilePath">Path to the JSON file to convert</param>
     /// <param name="variables">Variables object to store conversion data</param>
-    public void Convert(string jsonFilePath, TVariables variables)
+    protected void Convert(string jsonFilePath, TVariables variables)
     {
         InitializeVariables(jsonFilePath, variables);
         DeserializeJson(jsonFilePath, variables);

@@ -20,21 +20,20 @@ internal class WDBbuilder
             outWDBwriter.BaseStream.PadNull(8);
 
             // string
-            WriteSectionName(outWDBwriter, wdbVars.StringSectionName, wdbVars.StringSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII.StringSectionName, WDBVariablesXIII.StringSectionNameLength);
 
             // strtypelist
-            WriteSectionName(outWDBwriter, wdbVars.StrtypelistSectionName, wdbVars.StrtypelistSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII.StrtypelistSectionName, WDBVariablesXIII.StrtypelistSectionNameLength);
 
             // typelist
-            WriteSectionName(outWDBwriter, wdbVars.TypelistSectionName, wdbVars.TypelistSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII.TypelistSectionName, WDBVariablesXIII.TypelistSectionNameLength);
 
             // version
-            WriteSectionName(outWDBwriter, wdbVars.VersionSectionName, wdbVars.VersionSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII.VersionSectionName, WDBVariablesXIII.VersionSectionNameLength);
 
             // record names
-            foreach (var recordName in wdbVars.RecordsDataDict.Keys)
+            foreach (var recordNameBytes in wdbVars.RecordsDataDict.Keys.Select(recordName => Encoding.UTF8.GetBytes(recordName)))
             {
-                var recordNameBytes = Encoding.UTF8.GetBytes(recordName);
                 outWDBwriter.Write(recordNameBytes);
 
                 outWDBwriter.BaseStream.PadNull(16 - recordNameBytes.Length);
@@ -119,10 +118,8 @@ internal class WDBbuilder
 
 
             // records
-            foreach (var recordkey in wdbVars.OutPerRecordData.Keys)
+            foreach (var currentRecordData in wdbVars.OutPerRecordData.Keys.Select(recordkey => wdbVars.OutPerRecordData[recordkey]))
             {
-                var currentRecordData = wdbVars.OutPerRecordData[recordkey];
-
                 outWDBdataWriter.BaseStream.Position = outWDBdataWriter.BaseStream.Length;
                 secPos = (uint)outWDBdataWriter.BaseStream.Position;
                 outWDBdataWriter.Write(currentRecordData);
@@ -147,17 +144,15 @@ internal class WDBbuilder
     private static void PadBytesAfterSection(BinaryWriter outWDBdataWriter)
     {
         var currentPos = outWDBdataWriter.BaseStream.Length;
-        var padValue = 4;
+        const int padValue = 4;
 
-        if (currentPos % padValue != 0)
-        {
-            var remainder = currentPos % padValue;
-            var increaseBytes = padValue - remainder;
-            var newPos = currentPos + increaseBytes;
-            var nullBytesAmount = newPos - currentPos;
+        if (currentPos % padValue == 0) return;
+        var remainder = currentPos % padValue;
+        var increaseBytes = padValue - remainder;
+        var newPos = currentPos + increaseBytes;
+        var nullBytesAmount = newPos - currentPos;
 
-            outWDBdataWriter.BaseStream.PadNull((int)nullBytesAmount);
-        }
+        outWDBdataWriter.BaseStream.PadNull((int)nullBytesAmount);
     }
 
 

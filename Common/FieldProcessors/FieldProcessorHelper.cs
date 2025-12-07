@@ -64,7 +64,7 @@ public static class FieldProcessorHelper
         Utf8JsonWriter jsonWriter)
     {
         // Read the packed 32-bit value
-        var packedValue = _bitpackedProcessor.ReadPackedValue(data, offset);
+        var packedValue = BitpackedFieldProcessor.ReadPackedValue(data, offset);
 
         // Determine which fields fit in this 32-bit word
         var fieldsInWord = GetFieldsInWord(fieldNames, startFieldIndex);
@@ -73,20 +73,18 @@ public static class FieldProcessorHelper
         var extractedFields = _bitpackedProcessor.ExtractBitpackedFields(packedValue, fieldsInWord);
 
         // Write each field to JSON
-        foreach (var kvp in extractedFields)
+        foreach (var (fieldName, value) in extractedFields)
         {
-            var fieldName = kvp.Key;
-            var value = kvp.Value;
-
             Log.Debug($"{fieldName}: {value}");
 
-            if (value is int intValue)
+            switch (value)
             {
-                jsonWriter.WriteNumber(fieldName, intValue);
-            }
-            else if (value is uint uintValue)
-            {
-                jsonWriter.WriteNumber(fieldName, uintValue);
+                case int intValue:
+                    jsonWriter.WriteNumber(fieldName, intValue);
+                    break;
+                case uint uintValue:
+                    jsonWriter.WriteNumber(fieldName, uintValue);
+                    break;
             }
         }
 
@@ -101,7 +99,7 @@ public static class FieldProcessorHelper
         var fieldsInWord = new List<string>();
         var bitsUsed = 0;
 
-        for (int i = startIndex; i < allFields.Length; i++)
+        for (var i = startIndex; i < allFields.Length; i++)
         {
             var fieldName = allFields[i];
             var fieldBits = Support.SharedMethods.DeriveFieldNumber(fieldName);

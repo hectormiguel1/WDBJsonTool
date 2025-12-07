@@ -176,148 +176,107 @@
         public static readonly Dictionary<string, List<string>> FieldNames = new()
         {
             { "AutoClip",
-                new List<string>()
-                {
+                [
                     "sTitle", "sTarget", "sTarget2", "sText", "sPicture", "u4Category", "u7Sort",
                     "u4Chapter"
-                }
+                ]
             },
 
             { "Resident",
-                new List<string>()
-                {
-                    "fVal", "iVal1", "sResourceName", "fPosX", "fPosY", "fPosZ"
-                }
+                ["fVal", "iVal1", "sResourceName", "fPosX", "fPosY", "fPosZ"]
             },
 
             { "SoundFileIdDic",
-                new List<string>()
-                {
-                    "i31FileId", "u1IsStream"
-                }
+                ["i31FileId", "u1IsStream"]
             },
 
             { "SoundFileNameDic",
-                new List<string>()
-                {
-                    "sResourceName"
-                }
+                ["sResourceName"]
             },
 
             { "TreasureBox",
-                new List<string>()
-                {
-                    "sItemResourceId", "iItemCount", "sNextTreasureBoxResourceId"
-                }
+                ["sItemResourceId", "iItemCount", "sNextTreasureBoxResourceId"]
             },
 
             { "movie_items",
-                new List<string>()
-                {
-                    "sZoneNumber", "uCinemaSize", "uReserved", "uCinemaStart"
-                }
+                ["sZoneNumber", "uCinemaSize", "uReserved", "uCinemaStart"]
             },
 
             { "movie_items_ps3",
-                new List<string>()
-                {
-                    "sZoneNumber", "uCinemaSize", "u64CinemaStart"
-                }
+                ["sZoneNumber", "uCinemaSize", "u64CinemaStart"]
             },
 
             { "ZoneList",
-                new List<string>()
-                {
+                [
                     "fMovieTotalTimeSec", "iImageSize", "u8RefZoneNum0", "u8RefZoneNum1", "u8RefZoneNum2",
                     "u8RefZoneNum3", "u8RefZoneNum4", "u8RefZoneNum5", "u8RefZoneNum6", "u8RefZoneNum7",
                     "u8RefZoneNum8", "u8RefZoneNum9", "u8RefZoneNum10", "u1OnDisk0", "u1OnDisk1", "u1OnDisk2",
                     "u1OnDisk3", "u1On1stLayerPS3", "u1On2ndtLayerPS3"
-                }
+                ]
             },
 
             { "MonsterBook",
-                new List<string>()
-                {
-                    "u6MbookId", "u9SortId", "u9PictureId", "u1UnkBool"
-                }
+                ["u6MbookId", "u9SortId", "u9PictureId", "u1UnkBool"]
             },
 
             { "Zone",
-                new List<string>()
-                {
-                    "iBaseNum", "sName0", "sName1"
-                }
+                ["iBaseNum", "sName0", "sName1"]
             },
 
             { "savepoint",
-                new List<string>()
-                {
+                [
                     "sLoadScriptId", "i17PartyPositionMarkerGroupIndex",
                     "u15SaveIconBackgroundImageIndex", "i16SaveIconOverrideImageIndex"
-                }
+                ]
             },
 
             { "Script",
-                new List<string>()
-                {
+                [
                     "sClassName", "sMethodName", "iAdditionalArgCount", "iAdditionalArg0", "iAdditionalArg1",
                     "iAdditionalArg2", "iAdditionalArg3", "iAdditionalStringArgCount", "sAdditionalStringArg0",
                     "sAdditionalStringArg1", "sAdditionalStringArg2"
-                }
+                ]
             },
 
             { "bt_chainbonus",
-                new List<string>()
-                {
+                [
                     "u6WhoFrom", "u6When0", "u6When1", "u6When2", "u6WhatState", "u6WhoTo", "u6DoWhat",
                     "u6Where", "u6How", "u16Bonus"
-                }
+                ]
             },
 
             { "BattleCharaProp",
-                new List<string>()
-                {
+                [
                     "sInfoStrId", "sOpenCondArgS0", "u1NoLibra", "u8OpenCond", "u8AiOrderEn", "u8AiOrderJm",
                     "u4FlavorAtk", "u4FlavorBla", "u4FlavorDef"
-                }
+                ]
             },
 
             { "BattleConstants",
-                new List<string>()
-                {
-                    "iiVal", "ffVal", "ssVal"
-                }
+                ["iiVal", "ffVal", "ssVal"]
             },
 
             { "Item",
-                new List<string>()
-                {
+                [
                     "sItemNameStringId", "sHelpStringId", "sScriptId", "uPurchasePrice", "uSellPrice",
                     "u8MenuIcon", "u8ItemCategory", "i16ScriptArg0", "i16ScriptArg1", "u1IsUseBattleMenu",
                     "u1IsUseMenu", "u1IsDisposable", "u1IsSellable", "u5Rank", "u6Genre", "u1IsIgnoreGenre",
                     "u16SortAllByKCategory", "u16SortCategoryByCategory", "u16Experience", "i8Mulitplier",
                     "u1IsUseItemChange"
-                }
+                ]
             },
 
             { "item_consume",
-                new List<string>()
-                {
-                    "sAbilityId", "sLearnAbilityId", "u1IsUseRemodel", "u1IsUseGrow", "u16ConsumeAP"
-                }
+                ["sAbilityId", "sLearnAbilityId", "u1IsUseRemodel", "u1IsUseGrow", "u16ConsumeAP"]
             },
 
             { "SpecialAbility",
-                new List<string>()
-                {
-                    "sAbility", "u6Genre", "u3Count"
-                }
+                ["sAbility", "u6Genre", "u3Count"]
             },
 
             // partial
             { "ItemWeapon",
-                new List<string>()
-                {
+                [
                     "sWeaponCharaSpecId", "sWeaponCharaSpecId2", "sAbility", "sAbility2", "sAbility3",
                     "sUpgradeAbility", "sAbilityHelpStringId", "uBuyPriceIncrement", "uSellPriceIncrement",
                     "sDisasItem1", "sDisasItem2", "sDisasItem3", "sDisasItem4", "sDisasItem5", "u8UnkVal1",
@@ -328,12 +287,11 @@
                     "i16AtbModVal", "u16UnkVal8", "u16UnkVal9", "u16UnkVal10", "u14DisasRate1", "u7UnkVal11",
                     "u7UnkVal12", "u14DisasRate2", "u14DisasRate3", "u7UnkVal13", "u14DisasRate4",
                     "u7UnkVal14", "u14DisasRate5"
-                }
+                ]
             },
 
             { "Party",
-                new List<string>()
-                {
+                [
                     "sCharaSpecId", "sSubCharaSpecId0", "sSubCharaSpecId1", "sSubCharaSpecId2",
                     "sSubCharaSpecId3", "sSubCharaSpecId4", "sSubCharaSpecId5", "sSubCharaSpecId6",
                     "sSubCharaSpecId7", "sSubCharaSpecId8", "sRideObjectCharaSpecId0",
@@ -342,27 +300,25 @@
                     "fStopDistance", "fWalkDistance", "fPlayerRestraint", "u1IsEnableUserControl",
                     "u5OrderNumForCrest", "u8OrderNumForTool", "u7Expresspower", "u7Willpower",
                     "u7Brightness", "u7Cognition"
-                }
+                ]
             },
 
             {
                 "Succession",
-                new List<string>()
-                {
+                [
                     "u1RideOffChocobo", "i2NaviMapMode", "i2PartyCharaAIMode", "i2UserControlMode",
-                    "i9ZoneStateChangeTriggerOnEnter","i9ZoneStateWait", "u1EventSkipAble",
+                    "i9ZoneStateChangeTriggerOnEnter", "i9ZoneStateWait", "u1EventSkipAble",
                     "u1FieldCommonObjectHide", "u1EnablePause", "u1SuspendFieldObject",
                     "u1DisableTalk", "i9ZoneStateChangeTriggerOnExit", "i9ZoneStateExit",
                     "u13CameraInterporationTimeOnEnter", "u1FieldActiveFlag",
                     "u13CameraInterporationTimeOnExit", "u1HighModelEventFlag",
                     "u1ApplyFieldCameraByPlayerMatrix"
-                }
+                ]
             },
 
             {
                 "bt_summon",
-                new List<string>()
-                {
+                [
                     "iSummonKind", "sCharaSet", "sBtChSpec0", "sBtChSpec1", "sSummonInEv", "sDriveInEv",
                     "sFinishArtsEv", "iMaxSp0", "iMaxSp1", "iMaxSp2", "iMaxSp3", "iMaxSp4", "iMaxSp5",
                     "iMaxSp6", "iMaxSp7", "iMaxSp8", "iMaxSp9", "iMaxSp10", "iMaxSp11", "iMaxSp12",
@@ -372,37 +328,27 @@
                     "u16Mag1", "u16Mag2", "u16Mag3", "u16Mag4", "u16Mag5", "u16Mag6", "u16Mag7", "u16Mag8",
                     "u16Mag9", "u16Mag10", "u16Mag11", "u16Mag12", "u16Mag13", "u16Mag14", "u16Mag15",
                     "u16Mag16"
-                }
+                ]
             },
 
             {
                 "crystal",
-                new List<string>()
-                {
-                    "uCPCost", "sAbilityID", "u4Role", "u4CrystalStage", "u8NodeType", "u16NodeVal"
-                }
+                ["uCPCost", "sAbilityID", "u4Role", "u4CrystalStage", "u8NodeType", "u16NodeVal"]
             },
 
             {
                 "movie",
-                new List<string>()
-                {
-                    "sZone0", "sZone1"
-                }
+                ["sZone0", "sZone1"]
             },
 
             {
                 "ActionEffect",
-                new List<string>()
-                {
-                    "sEffectId", "iEffectArg1", "sSoundId"
-                }
+                ["sEffectId", "iEffectArg1", "sSoundId"]
             },
 
             {
                 "AttributeEffectResource",
-                new List<string>()
-                {
+                [
                     "sFootSoundResourceNameDefaultAttr", "sFootSoundResourceNameDrySoilAttr",
                     "sFootSoundResourceNameDampSoilAttr", "sFootSoundResourceNameGrassAttr",
                     "sFootSoundResourceNameBushAttr", "sFootSoundResourceNameSandAttr",
@@ -430,21 +376,17 @@
                     "sFootVfxResourceNameWireNetAttr", "sFootVfxResourceNameBranchOfMachineAttr",
                     "sFootVfxResourceNameBranchOfNatureAttr", "sFootVfxResourceNameCorkAttr",
                     "sFootVfxResourceNameMarbleAttr", "sFootVfxResourceNameHologramAttr"
-                }
+                ]
             },
 
             {
                 "AttributeEffectStateResource",
-                new List<string>()
-                {
-                    "sWalk", "sRun", "sJump", "sRetreat", "sLanding", "sSliding", "sSquat", "sStand", "sFly"
-                }
+                ["sWalk", "sRun", "sJump", "sRetreat", "sLanding", "sSliding", "sSquat", "sStand", "sFly"]
             },
 
             {
                 "BattleAbility",
-                new List<string>()
-                {
+                [
                     "sStringResId", "sInfoStResId", "sScriptId", "sAblArgStr0", "sAblArgStr1",
                     "sAutoAblStEff0", "fDistanceMin", "fDistanceMax", "fMaxJumpHeight", "fYDistanceMin",
                     "fYDistanceMax", "fAirJpHeight", "fAirJpTime", "sReplaceAirAttack", "sReplaceAirAir",
@@ -468,13 +410,12 @@
                     "u8CamArtsSelType", "u4RedirectMargeNof1", "u4RedirectMargeNof2", "u4RedirectMargeNof3",
                     "u16SysEffPos0", "u16RtEffPos0", "u16RtEffPos1", "u16RtEffPos2", "u16RtEffPos3",
                     "u16RtEffPos4"
-                }
+                ]
             },
 
             {
                 "MapSet",
-                new List<string>()
-                {
+                [
                     "iMemorySizeLimit", "iVideoMemoryLimit", "sScriptIdOnLoaded", "sMapNameResourceId",
                     "sBattleFreeSpaceResourceId", "i20LoadingTime", "i11LocationNum", "i16FieldSceneDataNum",
                     "i16BattleSceneDataNum", "i12PartyPositionMarkerGroup", "i10FieldMapNum0", "i10FieldMapNum1",
@@ -485,32 +426,27 @@
                     "i10FieldMapNum19", "i10VfxMapNum0", "i10VfxMapNum1", "i10VfxMapNum2", "i10VfxMapNum3",
                     "i10BattleMapNum0", "i10BattleMapNum1", "i10BattleMapNum2", "i10BattleMapNum3",
                     "i10BattleMapNum4", "i10BattleMapNum5"
-                }
+                ]
             },
 
             {
                 "EmotionVoice",
-                new List<string>()
-                {
+                [
                     "u4RandomMax0", "u4RandomMax1", "u4RandomMax2", "u4RandomMax3", "u4RandomMax4",
                     "u4RandomMax5", "u4RandomMax6", "u4RandomMax7", "u4RandomMax8", "u4RandomMax9",
                     "u4AIRandomMax0", "u4AIRandomMax1", "u4AIRandomMax2", "u4AIRandomMax3", "u4AIRandomMax4",
                     "u4AIRandomMax5", "u4AIRandomMax6", "u4AIRandomMax7", "u4AIRandomMax8", "u4AIRandomMax9"
-                }
+                ]
             },
 
             {
                 "EventFlag",
-                new List<string>()
-                {
-                    "iFlagIndex"
-                }
+                ["iFlagIndex"]
             },
 
             {
                 "Shop",
-                new List<string>()
-                {
+                [
                     "sFlagItemId", "sUnlockEventID", "sShopNameLabel", "sSignId", "sExplanationLabel",
                     "sUnkStringVal1", "sItemLabel1", "sItemLabel2", "sItemLabel3", "sItemLabel4",
                     "sItemLabel5", "sItemLabel6", "sItemLabel7", "sItemLabel8", "sItemLabel9", "sItemLabel10",
@@ -519,24 +455,22 @@
                     "sItemLabel21", "sItemLabel22", "sItemLabel23", "sItemLabel24", "sItemLabel25",
                     "sItemLabel26", "sItemLabel27", "sItemLabel28", "sItemLabel29", "sItemLabel30",
                     "sItemLabel31", "sItemLabel32", "u4Version", "u13ZoneNum"
-                }
+                ]
             },
 
             {
                 "BattleAutoAbility",
-                new List<string>()
-                {
+                [
                     "sStringResId", "sInfoStResId", "sScriptId", "sAutoAblArgStr0", "sAutoAblArgStr1",
                     "u1RsvFlag0", "u1RsvFlag1", "u1RsvFlag2", "u1RsvFlag3", "u4UseRole", "u4MenuCategory",
                     "i16MenuSortNo", "i16ScriptArg0", "i16ScriptArg1", "u8AutoAblKind", "i16AutoAblArgInt0",
                     "i16AutoAblArgInt1", "i16WepLvArg0", "i16WepLvArg1"
-                }
+                ]
             },
 
             {
                 "CharaSet",
-                new List<string>()
-                {
+                [
                     "iMemorySizeLimit", "iVideoMemorySizeLimit", "sCharaSpecId0", "sCharaSpecId1",
                     "sCharaSpecId2", "sCharaSpecId3", "sCharaSpecId4", "sCharaSpecId5", "sCharaSpecId6",
                     "sCharaSpecId7", "sCharaSpecId8", "sCharaSpecId9", "sCharaSpecId10", "sCharaSpecId11",
@@ -549,30 +483,28 @@
                     "sCharaSpecId42", "sCharaSpecId43", "sCharaSpecId44", "sCharaSpecId45", "sCharaSpecId46",
                     "sCharaSpecId47", "sCharaSpecId48", "sCharaSpecId49", "sCharaSpecId50", "sCharaSpecId51",
                     "sCharaSpecId52", "sCharaSpecId53", "sCharaSpecId54", "sCharaSpecId55", "sCharaSpecId56",
-                    "sCharaSpecId57", "sCharaSpecId58", "sCharaSpecId59","sCharaSpecId60", "sCharaSpecId61",
-                    "sCharaSpecId62","sCharaSpecId63", "u1PartyLoadRequestIndex0", "u1PartyLoadRequestIndex1",
+                    "sCharaSpecId57", "sCharaSpecId58", "sCharaSpecId59", "sCharaSpecId60", "sCharaSpecId61",
+                    "sCharaSpecId62", "sCharaSpecId63", "u1PartyLoadRequestIndex0", "u1PartyLoadRequestIndex1",
                     "u1PartyLoadRequestIndex2", "u1PartyLoadRequestIndex3", "u1PartyLoadRequestIndex4",
                     "u1PartyLoadRequestIndex5"
-                }
+                ]
             },
 
             {
                 "mission",
-                new List<string>()
-                {
+                [
                     "sMissionTitleStringId", "sMissionExplanationStringId", "sMissionTargetStringId",
                     "sMissionPosStringId", "sMissionMarkPosStringId", "sPosMarkerName", "sTreasureBoxId0",
                     "sTreasureBoxId1", "sTreasureBoxId2", "sCharasetId0", "sCharasetId1", "sCharasetId2",
                     "sCharasetId3", "sCharaspecId0", "sCharaspecId1", "sCharaspecId2", "sCharaspecId3",
                     "sCharaspecId4", "sAreaActivationName", "iBattleSceneNum", "u8ZoneNum", "u6IndexInMapMenu",
                     "u4Class", "u6MissionPictureId", "u1UnkBool1", "u1UnkBool2", "u1UnkBool3"
-                }
+                ]
             },
 
             {
                 "FieldCamera",
-                new List<string>()
-                {
+                [
                     "fFreeCameraRotationInterporationSpeedAdjustMode", "fFreeCameraRunStopMoveSpeed",
                     "fFreeCameraAimRotationSpeedAtMoving", "fFreeCameraCompositionAimRate",
                     "fFreeCameraAimHeight", "fFreeCameraAimHeightDuringWatchingFoot",
@@ -595,7 +527,7 @@
                     "f18CharacterChangingAlphaDistanceMin_PC", "f14FreeCameraPullupLimitAngle",
                     "f19CameraInterporationTimeDefault", "f18CharacterChangingAlphaLosen",
                     "f18FreeCameraPullupTimeAtJump"
-                }
+                ]
             }
         };
     }

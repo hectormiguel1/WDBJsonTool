@@ -4,23 +4,22 @@ using WDBJsonTool.Support;
 using WDBJsonTool.Extensions;
 
 namespace WDBJsonTool.XIII2LR.Extraction;
-internal class SectionsParser
+internal static class SectionsParser
 {
     public static void MainSections(BinaryReader wdbReader, WDBVariablesXIII2LR wdbVars)
     {
         // Parse main sections
         long currentSectionNamePos = 16;
-        string sectioNameRead;
 
-        wdbVars.StrtypelistData = new byte[] { };
-        wdbVars.StructItemData = new byte[] { };
+        wdbVars.StrtypelistData = [];
+        wdbVars.StructItemData = [];
         wdbVars.FieldCount = 0;
 
 
         while (true)
         {
             wdbReader.BaseStream.Position = currentSectionNamePos;
-            sectioNameRead = wdbReader.ReadBytesString(16, false);
+            var sectioNameRead = wdbReader.ReadBytesString(16, false);
 
             // Break the loop if its
             // not a valid "!" section
@@ -31,7 +30,7 @@ internal class SectionsParser
             }
 
             // !!sheetname
-            if (sectioNameRead == wdbVars.SheetNameSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.SheetNameSectionName)
             {
                 _ = wdbReader.BaseStream.Position = wdbReader.ReadBytesUInt32(true);
                 wdbVars.SheetName = wdbReader.ReadStringTillNull();
@@ -39,7 +38,7 @@ internal class SectionsParser
             }
 
             // !!strArray
-            if (sectioNameRead == wdbVars.StrArraySectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StrArraySectionName)
             {
                 wdbVars.HasStrArraySection = true;
 
@@ -48,7 +47,7 @@ internal class SectionsParser
             }
 
             // !!string
-            if (sectioNameRead == wdbVars.StringSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StringSectionName)
             {
                 wdbVars.HasStringSection = true;
 
@@ -57,7 +56,7 @@ internal class SectionsParser
             }
 
             // !!strtypelist
-            if (sectioNameRead == wdbVars.StrtypelistSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StrtypelistSectionName)
             {
                 wdbVars.ParseStrtypelistAsV1 = true;
                 wdbVars.StrtypelistData = SharedMethods.SaveSectionData(wdbReader, false);
@@ -65,7 +64,7 @@ internal class SectionsParser
             }
 
             // !!strtypelistb
-            if (sectioNameRead == wdbVars.StrtypelistbSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StrtypelistbSectionName)
             {
                 wdbVars.ParseStrtypelistAsV1 = false;
                 wdbVars.StrtypelistData = SharedMethods.SaveSectionData(wdbReader, false);
@@ -73,7 +72,7 @@ internal class SectionsParser
             }
 
             // !!typelist
-            if (sectioNameRead == wdbVars.TypelistSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.TypelistSectionName)
             {
                 wdbVars.HasTypelistSection = true;
                 wdbVars.TypelistData = SharedMethods.SaveSectionData(wdbReader, false);
@@ -81,21 +80,21 @@ internal class SectionsParser
             }
 
             // !!version
-            if (sectioNameRead == wdbVars.VersionSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.VersionSectionName)
             {
                 wdbVars.VersionData = SharedMethods.SaveSectionData(wdbReader, false);
                 wdbVars.RecordCount--;
             }
 
             // !structitem
-            if (sectioNameRead == wdbVars.StructItemSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StructItemSectionName)
             {
                 wdbVars.StructItemData = SharedMethods.SaveSectionData(wdbReader, false);
                 wdbVars.RecordCount--;
             }
 
             // !structitemnum
-            if (sectioNameRead == wdbVars.StructItemNumSectionName)
+            if (sectioNameRead == WDBVariablesXIII2LR.StructItemNumSectionName)
             {
                 wdbVars.FieldCount = BitConverter.ToUInt32(SharedMethods.SaveSectionData(wdbReader, true), 0);
                 wdbVars.RecordCount--;
@@ -114,18 +113,19 @@ internal class SectionsParser
             SharedMethods.ErrorExit("Necessary sections were unable to be processed correctly.");
         }
 
-        if (wdbVars.SheetName == "" || wdbVars.SheetName == null)
+        if (string.IsNullOrEmpty(wdbVars.SheetName))
         {
             wdbVars.SheetName = "Not Specified";
         }
 
-        Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
+        Log.Info($"{WDBVariablesXIII2LR.SheetNameSectionName}: {wdbVars.SheetName}");
 
         // Process !structitem data
         wdbVars.Fields = new string[wdbVars.FieldCount];
         var stringStartPos = 0;
 
-        for (int sf = 0; sf < wdbVars.FieldCount; sf++)
+        var sf = 0;
+        for (; sf < wdbVars.FieldCount; sf++)
         {
             var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StructItemData, stringStartPos);
 
@@ -142,19 +142,17 @@ internal class SectionsParser
 
         // Process strArray sections
         // data
-        if (wdbVars.HasStrArraySection)
-        {
-            Log.Info($"Organizing {wdbVars.StrArraySectionName} data....");
+        if (!wdbVars.HasStrArraySection) return;
+        Log.Info($"Organizing {WDBVariablesXIII2LR.StrArraySectionName} data....");
 
-            StrArrayParser.ArrangeArrayData(wdbVars);
-        }
+        StrArrayParser.ArrangeArrayData(wdbVars);
     }
 
 
     public static void MainSectionsToJson(WDBVariablesXIII2LR wdbVars, Utf8JsonWriter jsonWriter)
     {
         jsonWriter.WriteNumber(JsonVariables.RecordCountToken, wdbVars.RecordCount);
-        jsonWriter.WriteString(wdbVars.SheetNameSectionName, wdbVars.SheetName);
+        jsonWriter.WriteString(WDBVariablesXIII2LR.SheetNameSectionName, wdbVars.SheetName);
         jsonWriter.WriteBoolean(JsonVariables.HasStrArrayToken, wdbVars.HasStrArraySection);
 
 
@@ -171,23 +169,18 @@ internal class SectionsParser
         // Parse and write the strtypelistData
         jsonWriter.WriteBoolean(JsonVariables.IsStrTypelistV1Token, wdbVars.ParseStrtypelistAsV1);
 
-        if (wdbVars.ParseStrtypelistAsV1)
-        {
-            jsonWriter.WriteStartArray(wdbVars.StrtypelistSectionName);
-        }
-        else
-        {
-            jsonWriter.WriteStartArray(wdbVars.StrtypelistbSectionName);
-        }
+        jsonWriter.WriteStartArray(wdbVars.ParseStrtypelistAsV1
+            ? WDBVariablesXIII2LR.StrtypelistSectionName
+            : WDBVariablesXIII2LR.StrtypelistbSectionName);
 
         var strtypelistbIndex = 0;
         var currentStrtypelistData = new byte[4];
         var strtypelistIndexAdjust = wdbVars.ParseStrtypelistAsV1 ? 4 : 1;
         var strTypelistValueCount = wdbVars.ParseStrtypelistAsV1 ? wdbVars.StrtypelistData.Length / 4 : wdbVars.StrtypelistData.Length;
-        int strtypelistValue;
 
-        for (int s = 0; s < strTypelistValueCount; s++)
+        for (var s = 0; s < strTypelistValueCount; s++)
         {
+            int strtypelistValue;
             if (wdbVars.ParseStrtypelistAsV1)
             {
                 Array.ConstrainedCopy(wdbVars.StrtypelistData, strtypelistbIndex, currentStrtypelistData, 0, 4);
@@ -211,17 +204,16 @@ internal class SectionsParser
         jsonWriter.WriteBoolean(JsonVariables.HasTypelistToken, wdbVars.HasTypelistSection);
         if (wdbVars.HasTypelistSection)
         {
-            jsonWriter.WriteStartArray(wdbVars.TypelistSectionName);
+            jsonWriter.WriteStartArray(WDBVariablesXIII2LR.TypelistSectionName);
 
             var typelistbIndex = 0;
             var currentTypelistData = new byte[4];
-            int typelistValue;
 
-            for (int t = 0; t < wdbVars.TypelistData.Length / 4; t++)
+            for (var t = 0; t < wdbVars.TypelistData.Length / 4; t++)
             {
                 Array.ConstrainedCopy(wdbVars.TypelistData, typelistbIndex, currentTypelistData, 0, 4);
                 Array.Reverse(currentTypelistData);
-                typelistValue = (int)BitConverter.ToUInt32(currentTypelistData, 0);
+                var typelistValue = (int)BitConverter.ToUInt32(currentTypelistData, 0);
 
                 jsonWriter.WriteNumberValue(typelistValue);
                 typelistbIndex += 4;
@@ -232,13 +224,13 @@ internal class SectionsParser
 
 
         // Write version data
-        jsonWriter.WriteNumber(wdbVars.VersionSectionName, SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true));
+        jsonWriter.WriteNumber(WDBVariablesXIII2LR.VersionSectionName, SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true));
 
 
         // Write structitem data
-        jsonWriter.WriteStartArray(wdbVars.StructItemSectionName);
+        jsonWriter.WriteStartArray(WDBVariablesXIII2LR.StructItemSectionName);
 
-        for (int i = 0; i < wdbVars.FieldCount; i++)
+        for (var i = 0; i < wdbVars.FieldCount; i++)
         {
             jsonWriter.WriteStringValue(wdbVars.Fields[i]);
         }

@@ -13,39 +13,29 @@ internal class RecordsParser
         jsonWriter.WriteStartArray(JsonVariables.RecordsArrayToken);
 
         var sectionPos = wdbReader.BaseStream.Position;
-        string currentRecordName;
-        byte[] currentRecordData;
         var strtypelistIndex = 0;
         var currentRecordDataIndex = 0;
 
-        for (int r = 0; r < wdbVars.RecordCount; r++)
+        for (var r = 0; r < wdbVars.RecordCount; r++)
         {
             jsonWriter.WriteStartObject();
 
             _ = wdbReader.BaseStream.Position = sectionPos;
-            currentRecordName = wdbReader.ReadBytesString(16, false);
+            var currentRecordName = wdbReader.ReadBytesString(16, false);
 
             Log.Debug($"Record: {currentRecordName}");
             jsonWriter.WriteString(JsonVariables.RecordToken, currentRecordName);
 
-            currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            var currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
                     case (int)WdbFieldType.Bitpacked:
-                        var binaryData = BitOperationHelpers.UIntToBinary(SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true));
+                        var binaryData = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true).UIntToBinary();
                         var binaryDataIndex = binaryData.Length;
                         var fieldBitsToProcess = 32;
-
-                        int iTypedataVal;
-                        uint uTypeDataVal;
-                        int fTypeDataVal;
-                        uint strArrayTypeDataVal;
-                        string strArrayTypeDictKey;
-                        List<string> strArrayTypeDictList;
-                        string strArrayTypeStringVal;
 
                         while (fieldBitsToProcess != 0 && f < wdbVars.FieldCount)
                         {
@@ -56,9 +46,10 @@ internal class RecordsParser
                             {
                                 // sint
                                 case "i":
+                                    int iTypedataVal;
                                     if (fieldNum == 0)
                                     {
-                                        iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                        iTypedataVal = binaryData.BinaryToInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
@@ -72,28 +63,27 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    iTypedataVal = binaryData.BinaryToInt(binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
                                 // uint 
                                 case "u":
+                                    uint uTypeDataVal;
                                     if (fieldNum == 0)
                                     {
-                                        uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex - 32, 32);
+                                        uTypeDataVal = binaryData.BinaryToUInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
@@ -107,28 +97,27 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    uTypeDataVal = binaryData.BinaryToUInt(binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
                                 // float (bitpacked as int)
                                 case "f":
+                                    int fTypeDataVal;
                                     if (fieldNum == 0)
                                     {
-                                        fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                        fTypeDataVal = binaryData.BinaryToInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
@@ -142,20 +131,18 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    fTypeDataVal = binaryData.BinaryToInt(binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
@@ -167,32 +154,23 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    var strArrayTypeDataVal = binaryData.BinaryToUInt(binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    var strArrayTypeDictKey = wdbVars.Fields[f];
+                                    var strArrayTypeDictList = wdbVars.StrArrayDict[strArrayTypeDictKey];
+
+                                    var strArrayTypeStringVal = strArrayTypeDataVal < strArrayTypeDictList.Count ? strArrayTypeDictList[(int)strArrayTypeDataVal] : "";
+
+                                    Log.Debug($"{strArrayTypeDictKey}: {strArrayTypeStringVal}");
+                                    jsonWriter.WriteString(strArrayTypeDictKey, strArrayTypeStringVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        strArrayTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        strArrayTypeDictKey = wdbVars.Fields[f];
-                                        strArrayTypeDictList = wdbVars.StrArrayDict[strArrayTypeDictKey];
-
-                                        if (strArrayTypeDataVal < strArrayTypeDictList.Count)
-                                        {
-                                            strArrayTypeStringVal = strArrayTypeDictList[(int)strArrayTypeDataVal];
-                                        }
-                                        else
-                                        {
-                                            strArrayTypeStringVal = "";
-                                        }
-
-                                        Log.Debug($"{strArrayTypeDictKey}: {strArrayTypeStringVal}");
-                                        jsonWriter.WriteString(strArrayTypeDictKey, strArrayTypeStringVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
                             }

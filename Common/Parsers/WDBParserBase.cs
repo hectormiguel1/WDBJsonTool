@@ -10,8 +10,8 @@ namespace WDBJsonTool.Common.Parsers;
 /// </summary>
 public abstract class WDBParserBase<TVariables> where TVariables : WDBVariablesBase
 {
-    protected const string WPD_MAGIC = "WPD";
-    protected const int MAGIC_LENGTH = 3;
+    private const string WPD_MAGIC = "WPD";
+    private const int MAGIC_LENGTH = 3;
 
     /// <summary>
     /// Main extraction method that orchestrates the parsing process.
@@ -19,7 +19,7 @@ public abstract class WDBParserBase<TVariables> where TVariables : WDBVariablesB
     /// </summary>
     /// <param name="wdbFilePath">Path to the WDB file to parse</param>
     /// <param name="variables">Variables object to store parsed data</param>
-    public void Extract(string wdbFilePath, TVariables variables)
+    protected void Extract(string wdbFilePath, TVariables variables)
     {
         using var wdbReader = new BinaryReader(File.Open(wdbFilePath, FileMode.Open, FileAccess.Read, FileShare.Read));
 

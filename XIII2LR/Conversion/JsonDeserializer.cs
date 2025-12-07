@@ -3,7 +3,7 @@ using System.Text.Json;
 using WDBJsonTool.Support;
 
 namespace WDBJsonTool.XIII2LR.Conversion;
-internal class JsonDeserializer
+internal static class JsonDeserializer
 {
     public static void DeserializeData(string inJsonFile, WDBVariablesXIII2LR wdbVars)
     {
@@ -36,9 +36,9 @@ internal class JsonDeserializer
 
 
         // Get sheetName
-        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, wdbVars.SheetNameSectionName);
-        JsonMethods.CheckPropertyName(ref jsonReader, wdbVars.SheetNameSectionName);
-        JsonMethods.CheckTokenType("String", ref jsonReader, wdbVars.SheetNameSectionName);
+        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, WDBVariablesXIII2LR.SheetNameSectionName);
+        JsonMethods.CheckPropertyName(ref jsonReader, WDBVariablesXIII2LR.SheetNameSectionName);
+        JsonMethods.CheckTokenType("String", ref jsonReader, WDBVariablesXIII2LR.SheetNameSectionName);
         wdbVars.SheetName = jsonReader.GetString();
 
         if (wdbVars.SheetName != "Not Specified")
@@ -85,7 +85,7 @@ internal class JsonDeserializer
         JsonMethods.CheckTokenType("Bool", ref jsonReader, JsonVariables.IsStrTypelistV1Token);
         wdbVars.ParseStrtypelistAsV1 = jsonReader.GetBoolean();
 
-        var strtypelistSecNameProcess = wdbVars.ParseStrtypelistAsV1 ? wdbVars.StrtypelistSectionName : wdbVars.StrtypelistbSectionName;
+        var strtypelistSecNameProcess = wdbVars.ParseStrtypelistAsV1 ? WDBVariablesXIII2LR.StrtypelistSectionName : WDBVariablesXIII2LR.StrtypelistbSectionName;
         JsonMethods.CheckTokenType("PropertyName", ref jsonReader, strtypelistSecNameProcess);
         JsonMethods.CheckPropertyName(ref jsonReader, strtypelistSecNameProcess);
 
@@ -120,9 +120,9 @@ internal class JsonDeserializer
             wdbVars.RecordCountWithSections++;
 
             // Get typelist values
-            JsonMethods.CheckTokenType("PropertyName", ref jsonReader, wdbVars.TypelistSectionName);
-            JsonMethods.CheckTokenType("Array", ref jsonReader, wdbVars.TypelistSectionName);
-            var typelistValues = JsonMethods.GetNumbersFromArrayPropertyInt(ref jsonReader, wdbVars.TypelistSectionName);
+            JsonMethods.CheckTokenType("PropertyName", ref jsonReader, WDBVariablesXIII2LR.TypelistSectionName);
+            JsonMethods.CheckTokenType("Array", ref jsonReader, WDBVariablesXIII2LR.TypelistSectionName);
+            var typelistValues = JsonMethods.GetNumbersFromArrayPropertyInt(ref jsonReader, WDBVariablesXIII2LR.TypelistSectionName);
 
             wdbVars.TypelistData = new byte[typelistValues.Count * 4];
             wdbVars.TypelistData = SharedMethods.CreateArrayFromIntList(typelistValues, 4);
@@ -130,9 +130,9 @@ internal class JsonDeserializer
 
 
         // Get version
-        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, wdbVars.VersionSectionName);
-        JsonMethods.CheckPropertyName(ref jsonReader, wdbVars.VersionSectionName);
-        JsonMethods.CheckTokenType("Number", ref jsonReader, wdbVars.VersionSectionName);
+        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, WDBVariablesXIII2LR.VersionSectionName);
+        JsonMethods.CheckPropertyName(ref jsonReader, WDBVariablesXIII2LR.VersionSectionName);
+        JsonMethods.CheckTokenType("Number", ref jsonReader, WDBVariablesXIII2LR.VersionSectionName);
         wdbVars.VersionData = BitConverter.GetBytes(jsonReader.GetUInt32());
         Array.Reverse(wdbVars.VersionData);
 
@@ -140,16 +140,16 @@ internal class JsonDeserializer
 
 
         // Get structitem values
-        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, wdbVars.StructItemSectionName);
-        JsonMethods.CheckPropertyName(ref jsonReader, wdbVars.StructItemSectionName);
-        JsonMethods.CheckTokenType("Array", ref jsonReader, wdbVars.StructItemSectionName);
+        JsonMethods.CheckTokenType("PropertyName", ref jsonReader, WDBVariablesXIII2LR.StructItemSectionName);
+        JsonMethods.CheckPropertyName(ref jsonReader, WDBVariablesXIII2LR.StructItemSectionName);
+        JsonMethods.CheckTokenType("Array", ref jsonReader, WDBVariablesXIII2LR.StructItemSectionName);
         wdbVars.RecordCountWithSections += 2;
 
-        wdbVars.Fields = JsonMethods.GetStringsFromArrayProperty(ref jsonReader, wdbVars.StructItemSectionName).ToArray();
+        wdbVars.Fields = JsonMethods.GetStringsFromArrayProperty(ref jsonReader, WDBVariablesXIII2LR.StructItemSectionName).ToArray();
         wdbVars.FieldCount = (uint)wdbVars.Fields.Length;
         var structItemsList = new List<byte>();
 
-        for (int i = 0; i < wdbVars.FieldCount; i++)
+        for (var i = 0; i < wdbVars.FieldCount; i++)
         {
             structItemsList.AddRange(Encoding.UTF8.GetBytes(wdbVars.Fields[i] + "\0"));
         }
@@ -163,19 +163,10 @@ internal class JsonDeserializer
 
         // Determine whether there is
         // a string section
-        if (!wdbVars.HasStringSection)
-        {
-            if (wdbVars.StrtypelistValues.Contains(2))
-            {
-                wdbVars.HasStringSection = true;
-                wdbVars.RecordCountWithSections++;
-            }
-            else if (wdbVars.HasStrArraySection)
-            {
-                wdbVars.HasStringSection = true;
-                wdbVars.RecordCountWithSections++;
-            }
-        }
+        if (wdbVars.HasStringSection) return;
+        if (!wdbVars.StrtypelistValues.Contains(2) && !wdbVars.HasStrArraySection) return;
+        wdbVars.HasStringSection = true;
+        wdbVars.RecordCountWithSections++;
     }
 
 
@@ -187,23 +178,17 @@ internal class JsonDeserializer
         JsonMethods.CheckTokenType("Array", ref jsonReader, JsonVariables.RecordsArrayToken);
 
         var recordName = string.Empty;
-        string fieldName;
 
-        for (int i = 0; i < wdbVars.RecordCount; i++)
+        for (var i = 0; i < wdbVars.RecordCount; i++)
         {
             // Read start object
             _ = jsonReader.Read();
 
             if (jsonReader.TokenType != JsonTokenType.StartObject)
             {
-                if (recordName == "")
-                {
-                    SharedMethods.ErrorExit("The record array does not begin with a valid start object character");
-                }
-                else
-                {
-                    SharedMethods.ErrorExit($"A valid start object character was not present after this record {recordName}");
-                }
+                SharedMethods.ErrorExit(recordName == ""
+                    ? "The record array does not begin with a valid start object character"
+                    : $"A valid start object character was not present after this record {recordName}");
             }
 
             // Get record name
@@ -212,21 +197,16 @@ internal class JsonDeserializer
 
             if (jsonReader.TokenType != JsonTokenType.String)
             {
-                if (recordName == "")
-                {
-                    SharedMethods.ErrorExit("The first record's property value does not begin with a valid name");
-                }
-                else
-                {
-                    SharedMethods.ErrorExit($"Invalid property value specified for 'record' property. previous record read was {recordName}");
-                }
+                SharedMethods.ErrorExit(recordName == ""
+                    ? "The first record's property value does not begin with a valid name"
+                    : $"Invalid property value specified for 'record' property. previous record read was {recordName}");
             }
 
             recordName = jsonReader.GetString();
             var currentDataList = new List<object>();
 
             // Get record data
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 _ = jsonReader.Read();
 
@@ -235,7 +215,7 @@ internal class JsonDeserializer
                     SharedMethods.ErrorExit($"Field name PropertyType was invalid. occured when parsing {recordName} data.");
                 }
 
-                fieldName = jsonReader.GetString();
+                var fieldName = jsonReader.GetString();
 
                 if (fieldName.StartsWith("s"))
                 {

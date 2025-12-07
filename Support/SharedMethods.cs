@@ -8,7 +8,7 @@ namespace WDBJsonTool.Support;
 /// Provides shared utility methods for common operations across WDB processing.
 /// Includes binary data extraction, string parsing, validation, and error handling.
 /// </summary>
-internal class SharedMethods
+internal static class SharedMethods
 {
     /// <summary>
     /// Logs an error message and throws an InvalidOperationException.
@@ -71,7 +71,7 @@ internal class SharedMethods
         var processList = new List<uint>();
         var dataIndex = 0;
 
-        for (int i = 0; i < dataArray.Length / 4; i++)
+        for (var i = 0; i < dataArray.Length / 4; i++)
         {
             var currentValue = DeriveUIntFromSectionData(dataArray, dataIndex, true);
             processList.Add(currentValue);
@@ -92,7 +92,7 @@ internal class SharedMethods
     public static string DeriveStringFromArray(byte[] dataArray, int stringOffset)
     {
         var length = 0;
-        for (int s = stringOffset; s < dataArray.Length; s++)
+        for (var s = stringOffset; s < dataArray.Length; s++)
         {
             if (dataArray[s] == 0)
             {
@@ -115,7 +115,7 @@ internal class SharedMethods
     {
         var foundNumsList = new List<int>();
 
-        for (int i = 1; i < 3; i++)
+        for (var i = 1; i < 3; i++)
         {
             if (i == 1 && !char.IsDigit(fieldName[i]))
             {
@@ -128,22 +128,11 @@ internal class SharedMethods
             }
         }
 
-        var foundNumStr = "";
-        foreach (var n in foundNumsList)
-        {
-            foundNumStr += n;
-        }
+        var foundNumStr = foundNumsList.Aggregate("", (current, n) => current + n);
 
-        var hasParsed = int.TryParse(foundNumStr, out int foundNum);
+        var hasParsed = int.TryParse(foundNumStr, out var foundNum);
 
-        if (hasParsed)
-        {
-            return foundNum;
-        }
-        else
-        {
-            return 0;
-        }
+        return hasParsed ? foundNum : 0;
     }
 
     /// <summary>
@@ -189,7 +178,7 @@ internal class SharedMethods
         var dataArray = new byte[perValueSize * count];
         var index = 0;
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             switch (perValueSize)
             {
@@ -219,7 +208,7 @@ internal class SharedMethods
         var dataArray = new byte[4 * count];
         var index = 0;
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             BinaryPrimitives.WriteUInt32BigEndian(dataArray.AsSpan(index, 4), uintList[i]);
             index += 4;
@@ -238,11 +227,9 @@ internal class SharedMethods
     {
         var maxValue = Convert.ToUInt32(new string('1', fieldNum), 2);
 
-        if (value > maxValue)
-        {
-            Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
-            value = 0;
-        }
+        if (value <= maxValue) return;
+        Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
+        value = 0;
     }
 
 
@@ -255,21 +242,16 @@ internal class SharedMethods
 
             var newValue = valueBinary.BinaryToInt(0, fieldNum);
 
-            if (newValue != value)
-            {
-                Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
-                value = 0;
-            }
+            if (newValue == value) return;
         }
         else
         {
             var maxValue = Convert.ToInt32(new string('1', fieldNum), 2);
 
-            if (value > maxValue)
-            {
-                Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
-                value = 0;
-            }
+            if (value <= maxValue) return;
         }
+
+        Log.Warn($"Value {value} will be zeroed due to exceeding bit amount");
+        value = 0;
     }
 }

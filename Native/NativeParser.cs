@@ -2,6 +2,8 @@ using System.Runtime.InteropServices;
 using WDBJsonTool.Common;
 using WDBJsonTool.Support;
 using WDBJsonTool.Extensions;
+using WDBJsonTool.XIII;
+using WDBJsonTool.XIII2LR;
 
 namespace WDBJsonTool.Native;
 /// <summary>
@@ -54,7 +56,7 @@ public static unsafe class NativeParser
         wdbFile->StrtypelistValues = NativeMemoryManager.AllocateUIntArray(wdbVars.StrtypelistValues);
 
         // Allocate field names if known
-        if (wdbVars.IsKnown && wdbVars.Fields != null)
+        if (wdbVars is { IsKnown: true, Fields: not null })
         {
             wdbFile->FieldNames = NativeMemoryManager.AllocateStringArray(wdbVars.Fields, out _);
         }
@@ -73,33 +75,29 @@ public static unsafe class NativeParser
         var sectionList = new List<(string name, byte[]? data)>();
 
         if (wdbVars.StringsData != null)
-            sectionList.Add((wdbVars.StringSectionName, wdbVars.StringsData));
+            sectionList.Add((WDBVariablesXIII.StringSectionName, wdbVars.StringsData));
         if (wdbVars.StrtypelistData != null)
-            sectionList.Add((wdbVars.StrtypelistSectionName, wdbVars.StrtypelistData));
+            sectionList.Add((WDBVariablesXIII.StrtypelistSectionName, wdbVars.StrtypelistData));
         if (wdbVars.TypelistData != null)
-            sectionList.Add((wdbVars.TypelistSectionName, wdbVars.TypelistData));
+            sectionList.Add((WDBVariablesXIII.TypelistSectionName, wdbVars.TypelistData));
         if (wdbVars.VersionData != null)
-            sectionList.Add((wdbVars.VersionSectionName, wdbVars.VersionData));
+            sectionList.Add((WDBVariablesXIII.VersionSectionName, wdbVars.VersionData));
 
         wdbFile->SectionCount = (uint)sectionList.Count;
 
-        if (sectionList.Count > 0)
+        if (sectionList.Count <= 0) return;
+        wdbFile->Sections = Marshal.AllocHGlobal(sizeof(WdbSection) * sectionList.Count);
+        var sections = (WdbSection*)wdbFile->Sections;
+
+        for (var i = 0; i < sectionList.Count; i++)
         {
-            wdbFile->Sections = Marshal.AllocHGlobal(sizeof(WdbSection) * sectionList.Count);
-            var sections = (WdbSection*)wdbFile->Sections;
+            sections[i] = new WdbSection();
+            NativeMemoryManager.CopyStringToFixedBuffer(sections[i].Name, 32, sectionList[i].name);
 
-            for (int i = 0; i < sectionList.Count; i++)
-            {
-                sections[i] = new WdbSection();
-                NativeMemoryManager.CopyStringToFixedBuffer(sections[i].Name, 32, sectionList[i].name);
-
-                if (sectionList[i].data != null)
-                {
-                    sections[i].DataSize = (uint)sectionList[i].data!.Length;
-                    sections[i].Data = Marshal.AllocHGlobal(sectionList[i].data.Length);
-                    Marshal.Copy(sectionList[i].data, 0, sections[i].Data, sectionList[i].data.Length);
-                }
-            }
+            if (sectionList[i].data == null) continue;
+            sections[i].DataSize = (uint)sectionList[i].data!.Length;
+            sections[i].Data = Marshal.AllocHGlobal(sectionList[i].data.Length);
+            Marshal.Copy(sectionList[i].data, 0, sections[i].Data, sectionList[i].data.Length);
         }
     }
 
@@ -110,7 +108,7 @@ public static unsafe class NativeParser
 
         var sectionPos = wdbReader.BaseStream.Position;
 
-        for (int r = 0; r < wdbVars.RecordCount; r++)
+        for (var r = 0; r < wdbVars.RecordCount; r++)
         {
             records[r] = new WdbRecord();
 
@@ -130,11 +128,11 @@ public static unsafe class NativeParser
             var recordDataIndex = 0;
             var fieldIndex = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 fields[fieldIndex] = new WdbField();
 
-                var fieldName = wdbVars.IsKnown && wdbVars.Fields != null
+                var fieldName = wdbVars is { IsKnown: true, Fields: not null }
                     ? wdbVars.Fields[f]
                     : GetDefaultFieldName(wdbVars.StrtypelistValues[strtypelistIndex], f);
 
@@ -169,7 +167,7 @@ public static unsafe class NativeParser
 
                     case 3: // uint
                         // Check for uint64
-                        if (wdbVars.IsKnown && wdbVars.Fields != null && wdbVars.Fields[f].StartsWith("u64"))
+                        if (wdbVars is { IsKnown: true, Fields: not null } && wdbVars.Fields[f].StartsWith("u64"))
                         {
                             var processArray = new byte[8];
                             Array.ConstrainedCopy(recordData, recordDataIndex, processArray, 0, 8);
@@ -274,45 +272,41 @@ public static unsafe class NativeParser
         var sectionList = new List<(string name, byte[]? data)>();
 
         if (wdbVars.SheetNameData != null)
-            sectionList.Add((wdbVars.SheetNameSectionName, wdbVars.SheetNameData));
+            sectionList.Add((WDBVariablesXIII2LR.SheetNameSectionName, wdbVars.SheetNameData));
         if (wdbVars.StringsData != null)
-            sectionList.Add((wdbVars.StringSectionName, wdbVars.StringsData));
+            sectionList.Add((WDBVariablesXIII2LR.StringSectionName, wdbVars.StringsData));
         if (wdbVars.StrtypelistData != null)
-            sectionList.Add((wdbVars.StrtypelistSectionName, wdbVars.StrtypelistData));
+            sectionList.Add((WDBVariablesXIII2LR.StrtypelistSectionName, wdbVars.StrtypelistData));
         if (wdbVars.TypelistData != null)
-            sectionList.Add((wdbVars.TypelistSectionName, wdbVars.TypelistData));
+            sectionList.Add((WDBVariablesXIII2LR.TypelistSectionName, wdbVars.TypelistData));
         if (wdbVars.VersionData != null)
-            sectionList.Add((wdbVars.VersionSectionName, wdbVars.VersionData));
+            sectionList.Add((WDBVariablesXIII2LR.VersionSectionName, wdbVars.VersionData));
         if (wdbVars.StrArrayData != null)
-            sectionList.Add((wdbVars.StrArraySectionName, wdbVars.StrArrayData));
+            sectionList.Add((WDBVariablesXIII2LR.StrArraySectionName, wdbVars.StrArrayData));
         if (wdbVars.StrArrayInfoData != null)
-            sectionList.Add((wdbVars.StrArrayInfoSectionName, wdbVars.StrArrayInfoData));
+            sectionList.Add((WDBVariablesXIII2LR.StrArrayInfoSectionName, wdbVars.StrArrayInfoData));
         if (wdbVars.StrArrayListData != null)
-            sectionList.Add((wdbVars.StrArrayListSectionName, wdbVars.StrArrayListData));
+            sectionList.Add((WDBVariablesXIII2LR.StrArrayListSectionName, wdbVars.StrArrayListData));
         if (wdbVars.StructItemData != null)
-            sectionList.Add((wdbVars.StructItemSectionName, wdbVars.StructItemData));
+            sectionList.Add((WDBVariablesXIII2LR.StructItemSectionName, wdbVars.StructItemData));
         if (wdbVars.StructItemNumData != null)
-            sectionList.Add((wdbVars.StructItemNumSectionName, wdbVars.StructItemNumData));
+            sectionList.Add((WDBVariablesXIII2LR.StructItemNumSectionName, wdbVars.StructItemNumData));
 
         wdbFile->SectionCount = (uint)sectionList.Count;
 
-        if (sectionList.Count > 0)
+        if (sectionList.Count <= 0) return;
+        wdbFile->Sections = Marshal.AllocHGlobal(sizeof(WdbSection) * sectionList.Count);
+        var sections = (WdbSection*)wdbFile->Sections;
+
+        for (var i = 0; i < sectionList.Count; i++)
         {
-            wdbFile->Sections = Marshal.AllocHGlobal(sizeof(WdbSection) * sectionList.Count);
-            var sections = (WdbSection*)wdbFile->Sections;
+            sections[i] = new WdbSection();
+            NativeMemoryManager.CopyStringToFixedBuffer(sections[i].Name, 32, sectionList[i].name);
 
-            for (int i = 0; i < sectionList.Count; i++)
-            {
-                sections[i] = new WdbSection();
-                NativeMemoryManager.CopyStringToFixedBuffer(sections[i].Name, 32, sectionList[i].name);
-
-                if (sectionList[i].data != null)
-                {
-                    sections[i].DataSize = (uint)sectionList[i].data!.Length;
-                    sections[i].Data = Marshal.AllocHGlobal(sectionList[i].data.Length);
-                    Marshal.Copy(sectionList[i].data, 0, sections[i].Data, sectionList[i].data.Length);
-                }
-            }
+            if (sectionList[i].data == null) continue;
+            sections[i].DataSize = (uint)sectionList[i].data!.Length;
+            sections[i].Data = Marshal.AllocHGlobal(sectionList[i].data.Length);
+            Marshal.Copy(sectionList[i].data, 0, sections[i].Data, sectionList[i].data.Length);
         }
     }
 
@@ -329,7 +323,7 @@ public static unsafe class NativeParser
         wdbFile->StrArrayEntries = Marshal.AllocHGlobal(sizeof(WdbStrArrayEntry) * wdbVars.StrArrayDict.Count);
         var entries = (WdbStrArrayEntry*)wdbFile->StrArrayEntries;
 
-        int i = 0;
+        var i = 0;
         foreach (var kvp in wdbVars.StrArrayDict)
         {
             entries[i] = new WdbStrArrayEntry();
@@ -340,7 +334,7 @@ public static unsafe class NativeParser
             {
                 entries[i].Strings = Marshal.AllocHGlobal(IntPtr.Size * kvp.Value.Count);
                 var strings = (IntPtr*)entries[i].Strings;
-                for (int j = 0; j < kvp.Value.Count; j++)
+                for (var j = 0; j < kvp.Value.Count; j++)
                 {
                     strings[j] = NativeMemoryManager.AllocateString(kvp.Value[j]);
                 }
@@ -356,7 +350,7 @@ public static unsafe class NativeParser
 
         var sectionPos = wdbReader.BaseStream.Position;
 
-        for (int r = 0; r < wdbVars.RecordCount; r++)
+        for (var r = 0; r < wdbVars.RecordCount; r++)
         {
             records[r] = new WdbRecord();
 
@@ -375,7 +369,7 @@ public static unsafe class NativeParser
             var recordDataIndex = 0;
             var fieldIndex = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 fields[fieldIndex] = new WdbField();
 

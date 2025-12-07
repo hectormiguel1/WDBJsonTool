@@ -12,37 +12,37 @@ internal class WDBVariablesXIII2LR : WDBVariablesBase
     public bool HasStringSection;
     public bool ParseStrtypelistAsV1;
     public bool HasTypelistSection;
-    public List<uint> StrArrayOffsets = new();
-    public List<string> NumStringFields = new();
-    public List<string> ProcessStringsList = new();
-    public Dictionary<string, List<string>> StrArrayDict = new();
-    public List<int> StrtypelistValues = new();
+    public readonly List<uint> StrArrayOffsets = [];
+    public readonly List<string> NumStringFields = [];
+    public List<string> ProcessStringsList = [];
+    public readonly Dictionary<string, List<string>> StrArrayDict = new();
+    public List<int> StrtypelistValues = [];
 
     // Section names
-    public readonly string SheetNameSectionName = "!!sheetname";
-    public readonly string StrArraySectionName = "!!strArray";
-    public readonly string StrArrayInfoSectionName = "!!strArrayInfo";
-    public readonly string StrArrayListSectionName = "!!strArrayList";
-    public readonly string StringSectionName = "!!string";
-    public readonly string StrtypelistSectionName = "!!strtypelist";
-    public readonly string StrtypelistbSectionName = "!!strtypelistb";
-    public readonly string TypelistSectionName = "!!typelist";
-    public readonly string VersionSectionName = "!!version";
-    public readonly string StructItemSectionName = "!structitem";
-    public readonly string StructItemNumSectionName = "!structitemnum";
+    public const string SheetNameSectionName = "!!sheetname";
+    public const string StrArraySectionName = "!!strArray";
+    public const string StrArrayInfoSectionName = "!!strArrayInfo";
+    public const string StrArrayListSectionName = "!!strArrayList";
+    public const string StringSectionName = "!!string";
+    public const string StrtypelistSectionName = "!!strtypelist";
+    public const string StrtypelistbSectionName = "!!strtypelistb";
+    public const string TypelistSectionName = "!!typelist";
+    public const string VersionSectionName = "!!version";
+    public const string StructItemSectionName = "!structitem";
+    public const string StructItemNumSectionName = "!structitemnum";
 
     // Section names string length
-    public readonly int SheetNameSectionNameLength = 11;
-    public readonly int StrArraySectionNameLength = 10;
-    public readonly int StrArrayInfoSectionNameLength = 14;
-    public readonly int StrArrayListSectionNameLength = 14;
-    public readonly int StringSectionNameLength = 8;
-    public readonly int StrtypelistSectionNameLength = 13;
-    public readonly int StrtypelistbSectionNameLength = 14;
-    public readonly int TypelistSectionNameLength = 10;
-    public readonly int VersionSectionNameLength = 9;
-    public readonly int StructItemSectionNameLength = 11;
-    public readonly int StructItemNumSectionNameLength = 14;
+    public const int SheetNameSectionNameLength = 11;
+    public const int StrArraySectionNameLength = 10;
+    public const int StrArrayInfoSectionNameLength = 14;
+    public const int StrArrayListSectionNameLength = 14;
+    public const int StringSectionNameLength = 8;
+    public const int StrtypelistSectionNameLength = 13;
+    public const int StrtypelistbSectionNameLength = 14;
+    public const int TypelistSectionNameLength = 10;
+    public const int VersionSectionNameLength = 9;
+    public const int StructItemSectionNameLength = 11;
+    public const int StructItemNumSectionNameLength = 14;
 
     // Section data
     public string? SheetName;
@@ -58,5 +58,4 @@ internal class WDBVariablesXIII2LR : WDBVariablesBase
     public byte[]? VersionData;
     public byte[]? StructItemData;
     public byte[]? StructItemNumData;
-    public uint FieldCount;
 }

@@ -22,7 +22,7 @@ internal class RecordsConversion
             var dataIndex = 0;
             var strtypelistIndex = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 var fieldBitsToProcess = 32;
                 var collectedBinary = string.Empty;
@@ -32,20 +32,17 @@ internal class RecordsConversion
                 {
                     // bitpacked
                     case (int)WdbFieldType.Bitpacked:
-                        int iTypeDataVal;
-                        uint uTypeDataVal;
-                        int fTypeDataVal;
 
                         while (fieldBitsToProcess != 0 && f < wdbVars.FieldCount)
                         {
-                            var fieldType = wdbVars.Fields[f].Substring(0, 1);
+                            var fieldType = wdbVars.Fields[f][..1];
                             var fieldNum = SharedMethods.DeriveFieldNumber(wdbVars.Fields[f]);
 
                             switch (fieldType)
                             {
                                 // sint
                                 case "i":
-                                    iTypeDataVal = Convert.ToInt32(recordData.Value[f]);
+                                    var iTypeDataVal = Convert.ToInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {iTypeDataVal}");
 
                                     var iResult = RecordConversionHelper.PackIntField(iTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -64,7 +61,7 @@ internal class RecordsConversion
 
                                 // uint
                                 case "u":
-                                    uTypeDataVal = Convert.ToUInt32(recordData.Value[f]);
+                                    var uTypeDataVal = Convert.ToUInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
 
                                     var uResult = RecordConversionHelper.PackUIntField(uTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -83,7 +80,7 @@ internal class RecordsConversion
 
                                 // float (bitpacked as int)
                                 case "f":
-                                    fTypeDataVal = Convert.ToInt32(recordData.Value[f]);
+                                    var fTypeDataVal = Convert.ToInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
 
                                     var fResult = RecordConversionHelper.PackFloatField(fTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -186,7 +183,7 @@ internal class RecordsConversion
             var stringFieldCounter = 0;
             var uintFieldCounter = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 var collectedBinary = string.Empty;
                 var addedString = false;

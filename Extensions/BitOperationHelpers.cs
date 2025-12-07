@@ -15,7 +15,7 @@ public static class BitOperationHelpers
     {
         var reversedBinaryVal = string.Empty;
 
-        for (int i = binaryVal.Length; i > 0; i--)
+        for (var i = binaryVal.Length; i > 0; i--)
         {
             reversedBinaryVal += binaryVal[i - 1];
         }
@@ -69,23 +69,19 @@ public static class BitOperationHelpers
         {
             return (int)Convert.ToUInt32(pass1, 2);
         }
-        else
+
+        var iterationCount = count - 1;
+
+        var significantBitPower = -(int)Math.Pow(2, iterationCount);
+        var finalComputedVal = significantBitPower;
+
+        for (var i = 0; i < iterationCount; i++)
         {
-            int pass1BinaryVal;
-            var iterationCount = count - 1;
-            int computedValWithPower;
-
-            var significantBitPower = -(int)Math.Pow(2, iterationCount);
-            var finalComputedVal = significantBitPower;
-
-            for (int i = 0; i < iterationCount; i++)
-            {
-                pass1BinaryVal = int.Parse(pass1[i + 1].ToString());
-                computedValWithPower = (int)Math.Pow(2, (count - 2) - i);
-                finalComputedVal += (computedValWithPower * pass1BinaryVal);
-            }
-
-            return finalComputedVal;
+            var pass1BinaryVal = int.Parse(pass1[i + 1].ToString());
+            var computedValWithPower = (int)Math.Pow(2, (count - 2) - i);
+            finalComputedVal += (computedValWithPower * pass1BinaryVal);
         }
+
+        return finalComputedVal;
     }
 }

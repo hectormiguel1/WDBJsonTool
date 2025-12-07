@@ -21,47 +21,46 @@ internal class WDBbuilder
             // sheetname
             if (wdbVars.SheetName != "Not Specified")
             {
-                WriteSectionName(outWDBwriter, wdbVars.SheetNameSectionName, wdbVars.SheetNameSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.SheetNameSectionName, WDBVariablesXIII2LR.SheetNameSectionNameLength);
             }
 
             // strarray
             if (wdbVars.HasStrArraySection)
             {
-                WriteSectionName(outWDBwriter, wdbVars.StrArraySectionName, wdbVars.StrArraySectionNameLength);
-                WriteSectionName(outWDBwriter, wdbVars.StrArrayInfoSectionName, wdbVars.StrArrayInfoSectionNameLength);
-                WriteSectionName(outWDBwriter, wdbVars.StrArrayListSectionName, wdbVars.StrArrayListSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StrArraySectionName, WDBVariablesXIII2LR.StrArraySectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StrArrayInfoSectionName, WDBVariablesXIII2LR.StrArrayInfoSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StrArrayListSectionName, WDBVariablesXIII2LR.StrArrayListSectionNameLength);
             }
 
             // string
             if (wdbVars.HasStringSection)
             {
-                WriteSectionName(outWDBwriter, wdbVars.StringSectionName, wdbVars.StringSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StringSectionName, WDBVariablesXIII2LR.StringSectionNameLength);
             }
 
             // strtypelist
-            var strtypelistSectionName = wdbVars.ParseStrtypelistAsV1 ? wdbVars.StrtypelistSectionName : wdbVars.StrtypelistbSectionName;
-            var strtypelistSectionNameLength = wdbVars.ParseStrtypelistAsV1 ? wdbVars.StrtypelistSectionNameLength : wdbVars.StrtypelistbSectionNameLength;
+            var strtypelistSectionName = wdbVars.ParseStrtypelistAsV1 ? WDBVariablesXIII2LR.StrtypelistSectionName : WDBVariablesXIII2LR.StrtypelistbSectionName;
+            var strtypelistSectionNameLength = wdbVars.ParseStrtypelistAsV1 ? WDBVariablesXIII2LR.StrtypelistSectionNameLength : WDBVariablesXIII2LR.StrtypelistbSectionNameLength;
             WriteSectionName(outWDBwriter, strtypelistSectionName, strtypelistSectionNameLength);
 
             // typelist
             if (wdbVars.HasTypelistSection)
             {
-                WriteSectionName(outWDBwriter, wdbVars.TypelistSectionName, wdbVars.TypelistSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.TypelistSectionName, WDBVariablesXIII2LR.TypelistSectionNameLength);
             }
 
             // version
-            WriteSectionName(outWDBwriter, wdbVars.VersionSectionName, wdbVars.VersionSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.VersionSectionName, WDBVariablesXIII2LR.VersionSectionNameLength);
 
             // structitem
-            WriteSectionName(outWDBwriter, wdbVars.StructItemSectionName, wdbVars.StructItemSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StructItemSectionName, WDBVariablesXIII2LR.StructItemSectionNameLength);
 
             // structitemnum
-            WriteSectionName(outWDBwriter, wdbVars.StructItemNumSectionName, wdbVars.StructItemNumSectionNameLength);
+            WriteSectionName(outWDBwriter, WDBVariablesXIII2LR.StructItemNumSectionName, WDBVariablesXIII2LR.StructItemNumSectionNameLength);
 
             // record names
-            foreach (var recordName in wdbVars.RecordsDataDict.Keys)
+            foreach (var recordNameBytes in wdbVars.RecordsDataDict.Keys.Select(recordName => Encoding.UTF8.GetBytes(recordName)))
             {
-                var recordNameBytes = Encoding.UTF8.GetBytes(recordName);
                 outWDBwriter.Write(recordNameBytes);
 
                 outWDBwriter.BaseStream.PadNull(16 - recordNameBytes.Length);
@@ -219,10 +218,8 @@ internal class WDBbuilder
 
 
             // records
-            foreach (var recordkey in wdbVars.OutPerRecordData.Keys)
+            foreach (var currentRecordData in wdbVars.OutPerRecordData.Keys.Select(recordkey => wdbVars.OutPerRecordData[recordkey]))
             {
-                var currentRecordData = wdbVars.OutPerRecordData[recordkey];
-
                 outWDBdataWriter.BaseStream.Position = outWDBdataWriter.BaseStream.Length;
                 secPos = (uint)outWDBdataWriter.BaseStream.Position;
                 outWDBdataWriter.Write(currentRecordData);
@@ -247,17 +244,15 @@ internal class WDBbuilder
     private static void PadBytesAfterSection(BinaryWriter outWDBdataWriter)
     {
         var currentPos = outWDBdataWriter.BaseStream.Length;
-        var padValue = 4;
+        const int padValue = 4;
 
-        if (currentPos % padValue != 0)
-        {
-            var remainder = currentPos % padValue;
-            var increaseBytes = padValue - remainder;
-            var newPos = currentPos + increaseBytes;
-            var nullBytesAmount = newPos - currentPos;
+        if (currentPos % padValue == 0) return;
+        var remainder = currentPos % padValue;
+        var increaseBytes = padValue - remainder;
+        var newPos = currentPos + increaseBytes;
+        var nullBytesAmount = newPos - currentPos;
 
-            outWDBdataWriter.BaseStream.PadNull((int)nullBytesAmount);
-        }
+        outWDBdataWriter.BaseStream.PadNull((int)nullBytesAmount);
     }
 
 

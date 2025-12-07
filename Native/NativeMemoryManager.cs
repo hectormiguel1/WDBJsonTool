@@ -41,7 +41,7 @@ public static unsafe class NativeMemoryManager
         var bytes = Encoding.UTF8.GetBytes(str);
         var copyLength = Math.Min(bytes.Length, bufferSize - 1);
 
-        for (int i = 0; i < copyLength; i++)
+        for (var i = 0; i < copyLength; i++)
         {
             buffer[i] = bytes[i];
         }
@@ -63,7 +63,7 @@ public static unsafe class NativeMemoryManager
         var arrayPtr = Marshal.AllocHGlobal(IntPtr.Size * strings.Length);
         var ptrArray = (IntPtr*)arrayPtr;
 
-        for (int i = 0; i < strings.Length; i++)
+        for (var i = 0; i < strings.Length; i++)
         {
             ptrArray[i] = AllocateString(strings[i]);
         }
@@ -82,7 +82,7 @@ public static unsafe class NativeMemoryManager
         var ptr = Marshal.AllocHGlobal(sizeof(uint) * values.Count);
         var uintPtr = (uint*)ptr;
 
-        for (int i = 0; i < values.Count; i++)
+        for (var i = 0; i < values.Count; i++)
         {
             uintPtr[i] = values[i];
         }
@@ -101,7 +101,7 @@ public static unsafe class NativeMemoryManager
         var ptr = Marshal.AllocHGlobal(sizeof(int) * values.Count);
         var intPtr = (int*)ptr;
 
-        for (int i = 0; i < values.Count; i++)
+        for (var i = 0; i < values.Count; i++)
         {
             intPtr[i] = values[i];
         }

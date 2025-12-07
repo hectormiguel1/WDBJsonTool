@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 
 namespace WDBJsonTool.Support;
-internal class JsonMethods
+internal static class JsonMethods
 {
     public static void CheckTokenType(string tokenType, ref Utf8JsonReader jsonReader, string property)
     {

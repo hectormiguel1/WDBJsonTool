@@ -5,9 +5,9 @@ using WDBJsonTool.Common;
 using WDBJsonTool.Common.FieldProcessors;
 
 namespace WDBJsonTool.XIII2LR.Conversion;
-internal class RecordsConversion
+internal static class RecordsConversion
 {
-    private static Dictionary<string, List<string>> _strArrayDataDict = new();
+    private static readonly Dictionary<string, List<string>> _strArrayDataDict = new();
 
     public static void ConvertRecordsStrArray(WDBVariablesXIII2LR wdbVars)
     {
@@ -15,25 +15,23 @@ internal class RecordsConversion
 
         foreach (var recordData in wdbVars.RecordsDataDict)
         {
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 var fieldType = wdbVars.Fields[f].Substring(0, 1);
                 var fieldNum = SharedMethods.DeriveFieldNumber(wdbVars.Fields[f]);
 
-                if (fieldType == "s" && fieldNum != 0)
+                if (fieldType != "s" || fieldNum == 0) continue;
+                var currentSField = wdbVars.Fields[f];
+                var currentString = recordData.Value[f].ToString();
+
+                if (!_strArrayDataDict.ContainsKey(currentSField))
                 {
-                    var currentSField = wdbVars.Fields[f];
-                    var currentString = recordData.Value[f].ToString();
+                    _strArrayDataDict.Add(currentSField, []);
+                }
 
-                    if (!_strArrayDataDict.ContainsKey(currentSField))
-                    {
-                        _strArrayDataDict.Add(currentSField, new List<string>());
-                    }
-
-                    if (!_strArrayDataDict[currentSField].Contains(currentString))
-                    {
-                        _strArrayDataDict[currentSField].Add(currentString);
-                    }
+                if (!_strArrayDataDict[currentSField].Contains(currentString))
+                {
+                    _strArrayDataDict[currentSField].Add(currentString);
                 }
             }
         }
@@ -42,26 +40,23 @@ internal class RecordsConversion
         wdbVars.ProcessedStringsDict.Add("", 0);
         var strArrayValDict = new Dictionary<string, List<uint>>();
 
-        foreach (var strArrayData in _strArrayDataDict)
+        foreach (var (currentArrayName, currentArrayList) in _strArrayDataDict)
         {
-            var currentArrayName = strArrayData.Key;
-            var currentArrayList = strArrayData.Value;
             var lastItemNumber = currentArrayList.Count;
             var addedString = false;
 
-            strArrayValDict.Add(currentArrayName, new List<uint>());
+            strArrayValDict.Add(currentArrayName, []);
 
-            for (int s = 0; s < currentArrayList.Count; s++)
+            for (var s = 0; s < currentArrayList.Count; s++)
             {
                 var currentValBinaryList = new List<string>();
 
-                for (int o = 0; o < wdbVars.OffsetsPerValue; o++)
+                for (var o = 0; o < wdbVars.OffsetsPerValue; o++)
                 {
                     var currentStringItem = currentArrayList[s];
 
-                    if (!wdbVars.ProcessedStringsDict.ContainsKey(currentStringItem))
+                    if (wdbVars.ProcessedStringsDict.TryAdd(currentStringItem, stringPos))
                     {
-                        wdbVars.ProcessedStringsDict.Add(currentStringItem, stringPos);
                         addedString = true;
                     }
 
@@ -116,7 +111,7 @@ internal class RecordsConversion
                 }
 
                 strArrayStream.Seek(0, SeekOrigin.Begin);
-                wdbVars.StrArrayData = new byte[] { };
+                wdbVars.StrArrayData = [];
                 wdbVars.StrArrayData = strArrayStream.ToArray();
             }
         }
@@ -131,7 +126,7 @@ internal class RecordsConversion
 
     public static void ConvertRecords(WDBVariablesXIII2LR wdbVars)
     {
-        uint stringPos = 1;
+        const uint stringPos = 1;
         wdbVars.ProcessedStringsDict.Add("", 0);
 
         WriteFieldValuesForRecords(wdbVars, stringPos);
@@ -153,31 +148,26 @@ internal class RecordsConversion
             var dataIndex = 0;
             var strtypelistIndex = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 var fieldBitsToProcess = 32;
                 var collectedBinary = string.Empty;
-                var addedString = false;
 
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
                     // bitpacked
                     case (int)WdbFieldType.Bitpacked:
-                        int iTypeDataVal;
-                        uint uTypeDataVal;
-                        int fTypeDataVal;
-                        uint sTypeDataVal;
 
                         while (fieldBitsToProcess != 0 && f < wdbVars.FieldCount)
                         {
-                            var fieldType = wdbVars.Fields[f].Substring(0, 1);
+                            var fieldType = wdbVars.Fields[f][..1];
                             var fieldNum = SharedMethods.DeriveFieldNumber(wdbVars.Fields[f]);
 
                             switch (fieldType)
                             {
                                 // sint
                                 case "i":
-                                    iTypeDataVal = Convert.ToInt32(recordData.Value[f]);
+                                    var iTypeDataVal = Convert.ToInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {iTypeDataVal}");
 
                                     var iResult = RecordConversionHelper.PackIntField(iTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -196,7 +186,7 @@ internal class RecordsConversion
 
                                 // uint
                                 case "u":
-                                    uTypeDataVal = Convert.ToUInt32(recordData.Value[f]);
+                                    var uTypeDataVal = Convert.ToUInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
 
                                     var uResult = RecordConversionHelper.PackUIntField(uTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -215,7 +205,7 @@ internal class RecordsConversion
 
                                 // float (bitpacked as int)
                                 case "f":
-                                    fTypeDataVal = Convert.ToInt32(recordData.Value[f]);
+                                    var fTypeDataVal = Convert.ToInt32(recordData.Value[f]);
                                     Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
 
                                     var fResult = RecordConversionHelper.PackFloatField(fTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -235,7 +225,7 @@ internal class RecordsConversion
                                 // (s#) strArray item index
                                 case "s":
                                     var stringItem = recordData.Value[f].ToString();
-                                    sTypeDataVal = (uint)_strArrayDataDict[wdbVars.Fields[f]].IndexOf(stringItem);
+                                    var sTypeDataVal = (uint)_strArrayDataDict[wdbVars.Fields[f]].IndexOf(stringItem);
                                     Log.Debug($"{wdbVars.Fields[f]}: {stringItem} | Index: {sTypeDataVal}");
 
                                     var sResult = RecordConversionHelper.PackStrArrayField(sTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
@@ -300,7 +290,7 @@ internal class RecordsConversion
                 }
             }
 
-                            wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
+            wdbVars.OutPerRecordData.Add(recordData.Key, currentOutData);
         }
     }
 }

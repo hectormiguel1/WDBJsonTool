@@ -18,7 +18,7 @@ internal class RecordsParser
         var strtypelistIndex = 0;
         var currentRecordDataIndex = 0;
 
-        for (int r = 0; r < wdbVars.RecordCount; r++)
+        for (var r = 0; r < wdbVars.RecordCount; r++)
         {
             jsonWriter.WriteStartObject();
 
@@ -30,7 +30,7 @@ internal class RecordsParser
 
             currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {
@@ -40,22 +40,19 @@ internal class RecordsParser
                         var binaryDataIndex = binaryData.Length;
                         var fieldBitsToProcess = 32;
 
-                        int iTypedataVal;
-                        uint uTypeDataVal;
-                        int fTypeDataVal;
-
                         while (fieldBitsToProcess != 0 && f < wdbVars.FieldCount)
                         {
-                            var fieldType = wdbVars.Fields[f].Substring(0, 1);
+                            var fieldType = wdbVars.Fields[f][..1];
                             var fieldNum = SharedMethods.DeriveFieldNumber(wdbVars.Fields[f]);
 
                             switch (fieldType)
                             {
                                 // sint
                                 case "i":
+                                    int iTypedataVal;
                                     if (fieldNum == 0)
                                     {
-                                        iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                        iTypedataVal = binaryData.BinaryToInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
@@ -72,7 +69,7 @@ internal class RecordsParser
 
                                     binaryDataIndex -= fieldNum;
 
-                                    iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                    iTypedataVal = binaryData.BinaryToInt(binaryDataIndex, fieldNum);
                                     fieldBitsToProcess -= fieldNum;
 
                                     Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
@@ -86,9 +83,10 @@ internal class RecordsParser
 
                                 // uint 
                                 case "u":
+                                    uint uTypeDataVal;
                                     if (fieldNum == 0)
                                     {
-                                        uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex - 32, 32);
+                                        uTypeDataVal = binaryData.BinaryToUInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
@@ -105,7 +103,7 @@ internal class RecordsParser
 
                                     binaryDataIndex -= fieldNum;
 
-                                    uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
+                                    uTypeDataVal = binaryData.BinaryToUInt(binaryDataIndex, fieldNum);
                                     fieldBitsToProcess -= fieldNum;
 
                                     Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
@@ -119,9 +117,10 @@ internal class RecordsParser
 
                                 // float (bitpacked as int)
                                 case "f":
+                                    int fTypeDataVal;
                                     if (fieldNum == 0)
                                     {
-                                        fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                        fTypeDataVal = binaryData.BinaryToInt(binaryDataIndex - 32, 32);
                                         fieldBitsToProcess = 0;
 
                                         Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
@@ -138,7 +137,7 @@ internal class RecordsParser
 
                                     binaryDataIndex -= fieldNum;
 
-                                    fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                    fTypeDataVal = binaryData.BinaryToInt(binaryDataIndex, fieldNum);
                                     fieldBitsToProcess -= fieldNum;
 
                                     Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
@@ -229,29 +228,27 @@ internal class RecordsParser
         jsonWriter.WriteStartArray(JsonVariables.RecordsArrayToken);
 
         var sectionPos = wdbReader.BaseStream.Position;
-        string currentRecordName;
-        byte[] currentRecordData;
         var strtypelistIndex = 0;
         var currentRecordDataIndex = 0;
 
-        for (int r = 0; r < wdbVars.RecordCount; r++)
+        for (var r = 0; r < wdbVars.RecordCount; r++)
         {
             jsonWriter.WriteStartObject();
 
             _ = wdbReader.BaseStream.Position = sectionPos;
-            currentRecordName = wdbReader.ReadBytesString(16, false);
+            var currentRecordName = wdbReader.ReadBytesString(16, false);
 
             Log.Debug($"Record: {currentRecordName}");
             jsonWriter.WriteString(JsonVariables.RecordToken, currentRecordName);
 
-            currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
+            var currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
             var bitpackedFieldCounter = 0;
             var floatFieldCounter = 0;
             var stringFieldCounter = 0;
             var uintFieldCounter = 0;
 
-            for (int f = 0; f < wdbVars.FieldCount; f++)
+            for (var f = 0; f < wdbVars.FieldCount; f++)
             {
                 switch (wdbVars.StrtypelistValues[strtypelistIndex])
                 {

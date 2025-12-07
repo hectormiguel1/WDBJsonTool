@@ -4,7 +4,7 @@ namespace WDBJsonTool.XIII2LR.Conversion;
 /// Entry point for XIII-2/LR WDB conversion (JSON to WDB).
 /// Now uses the XIII2LRWDBConverter which inherits from WDBConverterBase.
 /// </summary>
-internal class ConversionMain
+internal static class ConversionMain
 {
     public static void StartConversion(string jsonFilePath)
     {
