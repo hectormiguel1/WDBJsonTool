@@ -1,4 +1,6 @@
-﻿internal static class BinaryWriterHelpers
+﻿namespace WDBJsonTool.Extensions;
+
+internal static class BinaryWriterHelpers
 {
     public static void WriteBytesInt16(this BinaryWriter writerName, short valueToWrite, bool isBigEndian)
     {

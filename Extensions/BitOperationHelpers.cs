@@ -1,4 +1,6 @@
-﻿public static class BitOperationHelpers
+﻿namespace WDBJsonTool.Extensions;
+
+public static class BitOperationHelpers
 {
     public static string UShortToBinary(this ushort valToParse)
     {

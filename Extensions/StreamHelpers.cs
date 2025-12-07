@@ -1,4 +1,6 @@
-﻿public static class StreamHelpers
+﻿namespace WDBJsonTool.Extensions;
+
+public static class StreamHelpers
 {
     public static void CopyStreamTo(this Stream inStream, Stream outStream, long size, bool showProgress)
     {

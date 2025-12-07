@@ -1,269 +1,267 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace WDBJsonTool.Native
+namespace WDBJsonTool.Native;
+/// <summary>
+/// Manages native memory allocations for interop
+/// </summary>
+public static unsafe class NativeMemoryManager
 {
     /// <summary>
-    /// Manages native memory allocations for interop
+    /// Allocates a UTF-8 string in native memory
     /// </summary>
-    public static unsafe class NativeMemoryManager
+    public static IntPtr AllocateString(string? str)
     {
-        /// <summary>
-        /// Allocates a UTF-8 string in native memory
-        /// </summary>
-        public static IntPtr AllocateString(string? str)
+        if (string.IsNullOrEmpty(str))
         {
-            if (string.IsNullOrEmpty(str))
-            {
-                var emptyPtr = Marshal.AllocHGlobal(1);
-                Marshal.WriteByte(emptyPtr, 0);
-                return emptyPtr;
-            }
-
-            var bytes = Encoding.UTF8.GetBytes(str);
-            var ptr = Marshal.AllocHGlobal(bytes.Length + 1);
-            Marshal.Copy(bytes, 0, ptr, bytes.Length);
-            Marshal.WriteByte(ptr + bytes.Length, 0); // Null terminator
-            return ptr;
+            var emptyPtr = Marshal.AllocHGlobal(1);
+            Marshal.WriteByte(emptyPtr, 0);
+            return emptyPtr;
         }
 
-        /// <summary>
-        /// Copies a string to a fixed-size buffer
-        /// </summary>
-        public static void CopyStringToFixedBuffer(byte* buffer, int bufferSize, string? str)
+        var bytes = Encoding.UTF8.GetBytes(str);
+        var ptr = Marshal.AllocHGlobal(bytes.Length + 1);
+        Marshal.Copy(bytes, 0, ptr, bytes.Length);
+        Marshal.WriteByte(ptr + bytes.Length, 0); // Null terminator
+        return ptr;
+    }
+
+    /// <summary>
+    /// Copies a string to a fixed-size buffer
+    /// </summary>
+    public static void CopyStringToFixedBuffer(byte* buffer, int bufferSize, string? str)
+    {
+        if (string.IsNullOrEmpty(str))
         {
-            if (string.IsNullOrEmpty(str))
-            {
-                buffer[0] = 0;
-                return;
-            }
-
-            var bytes = Encoding.UTF8.GetBytes(str);
-            var copyLength = Math.Min(bytes.Length, bufferSize - 1);
-
-            for (int i = 0; i < copyLength; i++)
-            {
-                buffer[i] = bytes[i];
-            }
-            buffer[copyLength] = 0; // Null terminator
+            buffer[0] = 0;
+            return;
         }
 
-        /// <summary>
-        /// Allocates an array of pointers to strings
-        /// </summary>
-        public static IntPtr AllocateStringArray(string[]? strings, out int count)
+        var bytes = Encoding.UTF8.GetBytes(str);
+        var copyLength = Math.Min(bytes.Length, bufferSize - 1);
+
+        for (int i = 0; i < copyLength; i++)
         {
-            if (strings == null || strings.Length == 0)
-            {
-                count = 0;
-                return IntPtr.Zero;
-            }
+            buffer[i] = bytes[i];
+        }
+        buffer[copyLength] = 0; // Null terminator
+    }
 
-            count = strings.Length;
-            var arrayPtr = Marshal.AllocHGlobal(IntPtr.Size * strings.Length);
-            var ptrArray = (IntPtr*)arrayPtr;
-
-            for (int i = 0; i < strings.Length; i++)
-            {
-                ptrArray[i] = AllocateString(strings[i]);
-            }
-
-            return arrayPtr;
+    /// <summary>
+    /// Allocates an array of pointers to strings
+    /// </summary>
+    public static IntPtr AllocateStringArray(string[]? strings, out int count)
+    {
+        if (strings == null || strings.Length == 0)
+        {
+            count = 0;
+            return IntPtr.Zero;
         }
 
-        /// <summary>
-        /// Allocates an array of uint values
-        /// </summary>
-        public static IntPtr AllocateUIntArray(List<uint> values)
+        count = strings.Length;
+        var arrayPtr = Marshal.AllocHGlobal(IntPtr.Size * strings.Length);
+        var ptrArray = (IntPtr*)arrayPtr;
+
+        for (int i = 0; i < strings.Length; i++)
         {
-            if (values == null || values.Count == 0)
-                return IntPtr.Zero;
-
-            var ptr = Marshal.AllocHGlobal(sizeof(uint) * values.Count);
-            var uintPtr = (uint*)ptr;
-
-            for (int i = 0; i < values.Count; i++)
-            {
-                uintPtr[i] = values[i];
-            }
-
-            return ptr;
+            ptrArray[i] = AllocateString(strings[i]);
         }
 
-        /// <summary>
-        /// Allocates an array of int values
-        /// </summary>
-        public static IntPtr AllocateIntArray(List<int> values)
+        return arrayPtr;
+    }
+
+    /// <summary>
+    /// Allocates an array of uint values
+    /// </summary>
+    public static IntPtr AllocateUIntArray(List<uint> values)
+    {
+        if (values == null || values.Count == 0)
+            return IntPtr.Zero;
+
+        var ptr = Marshal.AllocHGlobal(sizeof(uint) * values.Count);
+        var uintPtr = (uint*)ptr;
+
+        for (int i = 0; i < values.Count; i++)
         {
-            if (values == null || values.Count == 0)
-                return IntPtr.Zero;
-
-            var ptr = Marshal.AllocHGlobal(sizeof(int) * values.Count);
-            var intPtr = (int*)ptr;
-
-            for (int i = 0; i < values.Count; i++)
-            {
-                intPtr[i] = values[i];
-            }
-
-            return ptr;
+            uintPtr[i] = values[i];
         }
 
-        /// <summary>
-        /// Free a WdbFile structure and all its allocated memory
-        /// </summary>
-        public static void FreeWdbFile(WdbFile* wdbFile)
+        return ptr;
+    }
+
+    /// <summary>
+    /// Allocates an array of int values
+    /// </summary>
+    public static IntPtr AllocateIntArray(List<int> values)
+    {
+        if (values == null || values.Count == 0)
+            return IntPtr.Zero;
+
+        var ptr = Marshal.AllocHGlobal(sizeof(int) * values.Count);
+        var intPtr = (int*)ptr;
+
+        for (int i = 0; i < values.Count; i++)
         {
-            if (wdbFile == null)
-                return;
-
-            // Free records
-            if (wdbFile->Records != IntPtr.Zero)
-            {
-                var records = (WdbRecord*)wdbFile->Records;
-                for (uint i = 0; i < wdbFile->RecordCount; i++)
-                {
-                    FreeWdbRecord(&records[i]);
-                }
-                Marshal.FreeHGlobal(wdbFile->Records);
-            }
-
-            // Free sections
-            if (wdbFile->Sections != IntPtr.Zero)
-            {
-                var sections = (WdbSection*)wdbFile->Sections;
-                for (uint i = 0; i < wdbFile->SectionCount; i++)
-                {
-                    if (sections[i].Data != IntPtr.Zero)
-                        Marshal.FreeHGlobal(sections[i].Data);
-                }
-                Marshal.FreeHGlobal(wdbFile->Sections);
-            }
-
-            // Free field names
-            if (wdbFile->FieldNames != IntPtr.Zero)
-            {
-                var fieldNames = (IntPtr*)wdbFile->FieldNames;
-                for (uint i = 0; i < wdbFile->FieldDefinitionCount; i++)
-                {
-                    if (fieldNames[i] != IntPtr.Zero)
-                        Marshal.FreeHGlobal(fieldNames[i]);
-                }
-                Marshal.FreeHGlobal(wdbFile->FieldNames);
-            }
-
-            // Free strtypelist values
-            if (wdbFile->StrtypelistValues != IntPtr.Zero)
-                Marshal.FreeHGlobal(wdbFile->StrtypelistValues);
-
-            // Free the WdbFile struct itself
-            Marshal.FreeHGlobal((IntPtr)wdbFile);
+            intPtr[i] = values[i];
         }
 
-        /// <summary>
-        /// Free a WdbRecord and its fields
-        /// </summary>
-        public static void FreeWdbRecord(WdbRecord* record)
-        {
-            if (record == null || record->Fields == IntPtr.Zero)
-                return;
+        return ptr;
+    }
 
-            var fields = (WdbField*)record->Fields;
-            for (uint i = 0; i < record->FieldCount; i++)
+    /// <summary>
+    /// Free a WdbFile structure and all its allocated memory
+    /// </summary>
+    public static void FreeWdbFile(WdbFile* wdbFile)
+    {
+        if (wdbFile == null)
+            return;
+
+        // Free records
+        if (wdbFile->Records != IntPtr.Zero)
+        {
+            var records = (WdbRecord*)wdbFile->Records;
+            for (uint i = 0; i < wdbFile->RecordCount; i++)
             {
-                if (fields[i].Value.Type == WdbFieldType.String && fields[i].Value.StringPtr != IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(fields[i].Value.StringPtr);
-                }
+                FreeWdbRecord(&records[i]);
             }
-            Marshal.FreeHGlobal(record->Fields);
+            Marshal.FreeHGlobal(wdbFile->Records);
         }
 
-        /// <summary>
-        /// Free a WdbParseResult
-        /// </summary>
-        public static void FreeParseResult(WdbParseResult* result)
+        // Free sections
+        if (wdbFile->Sections != IntPtr.Zero)
         {
-            if (result == null)
-                return;
-
-            if (result->ErrorMessage != IntPtr.Zero)
-                Marshal.FreeHGlobal(result->ErrorMessage);
-
-            if (result->WdbFile != IntPtr.Zero)
-                FreeWdbFile((WdbFile*)result->WdbFile);
-
-            Marshal.FreeHGlobal((IntPtr)result);
+            var sections = (WdbSection*)wdbFile->Sections;
+            for (uint i = 0; i < wdbFile->SectionCount; i++)
+            {
+                if (sections[i].Data != IntPtr.Zero)
+                    Marshal.FreeHGlobal(sections[i].Data);
+            }
+            Marshal.FreeHGlobal(wdbFile->Sections);
         }
 
-        /// <summary>
-        /// Free a WdbFileXIII2LR structure
-        /// </summary>
-        public static void FreeWdbFileXIII2LR(WdbFileXIII2LR* wdbFile)
+        // Free field names
+        if (wdbFile->FieldNames != IntPtr.Zero)
         {
-            if (wdbFile == null)
-                return;
-
-            // Free records
-            if (wdbFile->Records != IntPtr.Zero)
+            var fieldNames = (IntPtr*)wdbFile->FieldNames;
+            for (uint i = 0; i < wdbFile->FieldDefinitionCount; i++)
             {
-                var records = (WdbRecord*)wdbFile->Records;
-                for (uint i = 0; i < wdbFile->RecordCount; i++)
-                {
-                    FreeWdbRecord(&records[i]);
-                }
-                Marshal.FreeHGlobal(wdbFile->Records);
+                if (fieldNames[i] != IntPtr.Zero)
+                    Marshal.FreeHGlobal(fieldNames[i]);
             }
+            Marshal.FreeHGlobal(wdbFile->FieldNames);
+        }
 
-            // Free sections
-            if (wdbFile->Sections != IntPtr.Zero)
+        // Free strtypelist values
+        if (wdbFile->StrtypelistValues != IntPtr.Zero)
+            Marshal.FreeHGlobal(wdbFile->StrtypelistValues);
+
+        // Free the WdbFile struct itself
+        Marshal.FreeHGlobal((IntPtr)wdbFile);
+    }
+
+    /// <summary>
+    /// Free a WdbRecord and its fields
+    /// </summary>
+    public static void FreeWdbRecord(WdbRecord* record)
+    {
+        if (record == null || record->Fields == IntPtr.Zero)
+            return;
+
+        var fields = (WdbField*)record->Fields;
+        for (uint i = 0; i < record->FieldCount; i++)
+        {
+            if (fields[i].Value.Type == WdbFieldType.String && fields[i].Value.StringPtr != IntPtr.Zero)
             {
-                var sections = (WdbSection*)wdbFile->Sections;
-                for (uint i = 0; i < wdbFile->SectionCount; i++)
-                {
-                    if (sections[i].Data != IntPtr.Zero)
-                        Marshal.FreeHGlobal(sections[i].Data);
-                }
-                Marshal.FreeHGlobal(wdbFile->Sections);
+                Marshal.FreeHGlobal(fields[i].Value.StringPtr);
             }
+        }
+        Marshal.FreeHGlobal(record->Fields);
+    }
 
-            // Free field names
-            if (wdbFile->FieldNames != IntPtr.Zero)
+    /// <summary>
+    /// Free a WdbParseResult
+    /// </summary>
+    public static void FreeParseResult(WdbParseResult* result)
+    {
+        if (result == null)
+            return;
+
+        if (result->ErrorMessage != IntPtr.Zero)
+            Marshal.FreeHGlobal(result->ErrorMessage);
+
+        if (result->WdbFile != IntPtr.Zero)
+            FreeWdbFile((WdbFile*)result->WdbFile);
+
+        Marshal.FreeHGlobal((IntPtr)result);
+    }
+
+    /// <summary>
+    /// Free a WdbFileXIII2LR structure
+    /// </summary>
+    public static void FreeWdbFileXIII2LR(WdbFileXIII2LR* wdbFile)
+    {
+        if (wdbFile == null)
+            return;
+
+        // Free records
+        if (wdbFile->Records != IntPtr.Zero)
+        {
+            var records = (WdbRecord*)wdbFile->Records;
+            for (uint i = 0; i < wdbFile->RecordCount; i++)
             {
-                var fieldNames = (IntPtr*)wdbFile->FieldNames;
-                for (uint i = 0; i < wdbFile->FieldDefinitionCount; i++)
-                {
-                    if (fieldNames[i] != IntPtr.Zero)
-                        Marshal.FreeHGlobal(fieldNames[i]);
-                }
-                Marshal.FreeHGlobal(wdbFile->FieldNames);
+                FreeWdbRecord(&records[i]);
             }
+            Marshal.FreeHGlobal(wdbFile->Records);
+        }
 
-            // Free strtypelist values
-            if (wdbFile->StrtypelistValues != IntPtr.Zero)
-                Marshal.FreeHGlobal(wdbFile->StrtypelistValues);
-
-            // Free strArray entries
-            if (wdbFile->StrArrayEntries != IntPtr.Zero)
+        // Free sections
+        if (wdbFile->Sections != IntPtr.Zero)
+        {
+            var sections = (WdbSection*)wdbFile->Sections;
+            for (uint i = 0; i < wdbFile->SectionCount; i++)
             {
-                var entries = (WdbStrArrayEntry*)wdbFile->StrArrayEntries;
-                for (uint i = 0; i < wdbFile->StrArrayEntryCount; i++)
+                if (sections[i].Data != IntPtr.Zero)
+                    Marshal.FreeHGlobal(sections[i].Data);
+            }
+            Marshal.FreeHGlobal(wdbFile->Sections);
+        }
+
+        // Free field names
+        if (wdbFile->FieldNames != IntPtr.Zero)
+        {
+            var fieldNames = (IntPtr*)wdbFile->FieldNames;
+            for (uint i = 0; i < wdbFile->FieldDefinitionCount; i++)
+            {
+                if (fieldNames[i] != IntPtr.Zero)
+                    Marshal.FreeHGlobal(fieldNames[i]);
+            }
+            Marshal.FreeHGlobal(wdbFile->FieldNames);
+        }
+
+        // Free strtypelist values
+        if (wdbFile->StrtypelistValues != IntPtr.Zero)
+            Marshal.FreeHGlobal(wdbFile->StrtypelistValues);
+
+        // Free strArray entries
+        if (wdbFile->StrArrayEntries != IntPtr.Zero)
+        {
+            var entries = (WdbStrArrayEntry*)wdbFile->StrArrayEntries;
+            for (uint i = 0; i < wdbFile->StrArrayEntryCount; i++)
+            {
+                if (entries[i].Strings != IntPtr.Zero)
                 {
-                    if (entries[i].Strings != IntPtr.Zero)
+                    var strings = (IntPtr*)entries[i].Strings;
+                    for (uint j = 0; j < entries[i].StringCount; j++)
                     {
-                        var strings = (IntPtr*)entries[i].Strings;
-                        for (uint j = 0; j < entries[i].StringCount; j++)
-                        {
-                            if (strings[j] != IntPtr.Zero)
-                                Marshal.FreeHGlobal(strings[j]);
-                        }
-                        Marshal.FreeHGlobal(entries[i].Strings);
+                        if (strings[j] != IntPtr.Zero)
+                            Marshal.FreeHGlobal(strings[j]);
                     }
+                    Marshal.FreeHGlobal(entries[i].Strings);
                 }
-                Marshal.FreeHGlobal(wdbFile->StrArrayEntries);
             }
-
-            Marshal.FreeHGlobal((IntPtr)wdbFile);
+            Marshal.FreeHGlobal(wdbFile->StrArrayEntries);
         }
+
+        Marshal.FreeHGlobal((IntPtr)wdbFile);
     }
 }

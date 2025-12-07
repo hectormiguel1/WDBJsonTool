@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+namespace WDBJsonTool.Extensions;
+
 public static class BinaryReaderHelpers
 {
     public static short ReadBytesInt16(this BinaryReader reader, bool isBigEndian)

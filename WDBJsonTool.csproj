@@ -20,10 +20,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="WDBJsonTool\" />
-  </ItemGroup>
   
   <Import Project="..\NativeLogger\NativeLogger.projitems" Label="Shared"/>
 
