@@ -1,36 +1,14 @@
-﻿namespace WDBJsonTool.XIII.Conversion
+namespace WDBJsonTool.XIII.Conversion;
+
+/// <summary>
+/// Entry point for XIII WDB conversion (JSON to WDB).
+/// Now uses the XIIIWDBConverter which inherits from WDBConverterBase.
+/// </summary>
+internal class ConversionMain
 {
-    internal class ConversionMain
+    public static void StartConversion(string jsonFilePath)
     {
-        public static void StartConversion(string inJsonFile)
-        {
-            var wdbVars = new WDBVariablesXIII();
-
-            JsonDeserializer.DeserializeData(inJsonFile, wdbVars);
-
-            if (wdbVars.IsKnown)
-            {
-                Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
-            }
-
-            Log.Info($"Total records (with sections): {wdbVars.RecordCountWithSections}");
-
-            Log.Info("Building records....");
-
-            wdbVars.WDBFilePath = Path.Combine(Path.GetDirectoryName(inJsonFile), Path.GetFileNameWithoutExtension(inJsonFile) + ".wdb");
-
-            if (wdbVars.IsKnown)
-            {
-                RecordsConversion.ConvertRecordsWithFields(wdbVars);
-            }
-            else
-            {
-                RecordsConversion.ConvertRecordsNoFields(wdbVars);
-            }
-
-            WDBbuilder.BuildWDB(wdbVars);
-
-            Log.Info("Finished building wdb file for extracted json data");
-        }
+        var converter = new XIIIWDBConverter();
+        converter.ConvertToWDB(jsonFilePath);
     }
 }

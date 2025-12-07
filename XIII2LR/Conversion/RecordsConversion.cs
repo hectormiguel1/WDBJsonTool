@@ -1,7 +1,8 @@
-﻿using System.Text;
+using System.Text;
 using WDBJsonTool.Support;
 using WDBJsonTool.Extensions;
 using WDBJsonTool.Common;
+using WDBJsonTool.Common.FieldProcessors;
 
 namespace WDBJsonTool.XIII2LR.Conversion;
 internal class RecordsConversion
@@ -101,11 +102,7 @@ internal class RecordsConversion
             {
                 foreach (var strArrayValue in strArrayValDict)
                 {
-                    var arrayStartOffsetBytes = BitConverter.GetBytes(arrayStartOffset);
-                    wdbVars.StrArrayListData[listStartOffset] = arrayStartOffsetBytes[3];
-                    wdbVars.StrArrayListData[listStartOffset + 1] = arrayStartOffsetBytes[2];
-                    wdbVars.StrArrayListData[listStartOffset + 2] = arrayStartOffsetBytes[1];
-                    wdbVars.StrArrayListData[listStartOffset + 3] = arrayStartOffsetBytes[0];
+                    RecordConversionHelper.WriteUInt32Value(wdbVars.StrArrayListData, listStartOffset, arrayStartOffset);
 
                     var valueCount = (uint)strArrayValue.Value.Count;
 
@@ -181,122 +178,57 @@ internal class RecordsConversion
                                 // sint
                                 case "i":
                                     iTypeDataVal = Convert.ToInt32(recordData.Value[f]);
-
-                                    if (fieldNum != 0)
-                                    {
-                                        SharedMethods.ValidateInt(fieldNum, ref iTypeDataVal);
-                                    }
-
                                     Log.Debug($"{wdbVars.Fields[f]}: {iTypeDataVal}");
 
-                                    if (fieldNum == 0)
-                                    {
-                                        fieldNum = 32;
-                                    }
-
-                                    if (fieldNum > fieldBitsToProcess)
+                                    var iResult = RecordConversionHelper.PackIntField(iTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
+                                    if (iResult == "overflow")
                                     {
                                         f--;
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        var iTypedataValBinary = iTypeDataVal.IntToBinaryFixed(fieldNum);
-
-                                        if (iTypedataValBinary.Length > fieldNum)
-                                        {
-                                            iTypedataValBinary = iTypedataValBinary.Substring(iTypedataValBinary.Length - fieldNum, fieldNum);
-                                        }
-
-                                        iTypedataValBinary = iTypedataValBinary.ReverseBinary();
-                                        collectedBinary += iTypedataValBinary;
-
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
-                                // uint 
+                                // uint
                                 case "u":
                                     uTypeDataVal = Convert.ToUInt32(recordData.Value[f]);
-
-                                    if (fieldNum != 0)
-                                    {
-                                        SharedMethods.ValidateUInt(fieldNum, ref uTypeDataVal);
-                                    }
-
                                     Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
 
-                                    if (fieldNum == 0)
-                                    {
-                                        fieldNum = 32;
-                                    }
-
-                                    if (fieldNum > fieldBitsToProcess)
+                                    var uResult = RecordConversionHelper.PackUIntField(uTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
+                                    if (uResult == "overflow")
                                     {
                                         f--;
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        var uTypedataValBinary = uTypeDataVal.UIntToBinaryFixed(fieldNum).ReverseBinary();
-                                        collectedBinary += uTypedataValBinary;
-
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
                                 // float (bitpacked as int)
                                 case "f":
                                     fTypeDataVal = Convert.ToInt32(recordData.Value[f]);
-
-                                    if (fieldNum != 0)
-                                    {
-                                        SharedMethods.ValidateInt(fieldNum, ref fTypeDataVal);
-                                    }
-
                                     Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
 
-                                    if (fieldNum == 0)
-                                    {
-                                        fieldNum = 32;
-                                    }
-
-                                    if (fieldNum > fieldBitsToProcess)
+                                    var fResult = RecordConversionHelper.PackFloatField(fTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
+                                    if (fResult == "overflow")
                                     {
                                         f--;
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        var fTypedataValBinary = fTypeDataVal.IntToBinaryFixed(fieldNum);
-
-                                        if (fTypedataValBinary.Length > fieldNum)
-                                        {
-                                            fTypedataValBinary = fTypedataValBinary.Substring(fTypedataValBinary.Length - fieldNum, fieldNum);
-                                        }
-
-                                        fTypedataValBinary = fTypedataValBinary.ReverseBinary();
-                                        collectedBinary += fTypedataValBinary;
-
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
@@ -304,48 +236,25 @@ internal class RecordsConversion
                                 case "s":
                                     var stringItem = recordData.Value[f].ToString();
                                     sTypeDataVal = (uint)_strArrayDataDict[wdbVars.Fields[f]].IndexOf(stringItem);
-
-                                    if (fieldNum != 0)
-                                    {
-                                        SharedMethods.ValidateUInt(fieldNum, ref sTypeDataVal);
-                                    }
-
                                     Log.Debug($"{wdbVars.Fields[f]}: {stringItem} | Index: {sTypeDataVal}");
 
-                                    if (fieldNum == 0)
-                                    {
-                                        fieldNum = 32;
-                                    }
-
-                                    if (fieldNum > fieldBitsToProcess)
+                                    var sResult = RecordConversionHelper.PackStrArrayField(sTypeDataVal, fieldNum, ref fieldBitsToProcess, ref collectedBinary);
+                                    if (sResult == "overflow")
                                     {
                                         f--;
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        var sTypedataValBinary = sTypeDataVal.UIntToBinaryFixed(fieldNum).ReverseBinary();
-                                        collectedBinary += sTypedataValBinary;
-
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
                             }
                         }
 
-                        collectedBinary = collectedBinary.ReverseBinary();
-                        var collectiveBinaryBytes = BitConverter.GetBytes(Convert.ToUInt32(collectedBinary, 2));
-
-                        currentOutData[dataIndex] = collectiveBinaryBytes[3];
-                        currentOutData[dataIndex + 1] = collectiveBinaryBytes[2];
-                        currentOutData[dataIndex + 2] = collectiveBinaryBytes[1];
-                        currentOutData[dataIndex + 3] = collectiveBinaryBytes[0];
+                        RecordConversionHelper.WriteBitpackedValue(currentOutData, dataIndex, collectedBinary);
 
                         strtypelistIndex++;
                         dataIndex += 4;
@@ -356,12 +265,7 @@ internal class RecordsConversion
                         var floatVal = Convert.ToSingle(recordData.Value[f]);
                         Log.Debug($"{wdbVars.Fields[f]}: {floatVal}");
 
-                        var floatValBytes = BitConverter.GetBytes(floatVal);
-
-                        currentOutData[dataIndex] = floatValBytes[3];
-                        currentOutData[dataIndex + 1] = floatValBytes[2];
-                        currentOutData[dataIndex + 2] = floatValBytes[1];
-                        currentOutData[dataIndex + 3] = floatValBytes[0];
+                        RecordConversionHelper.WriteFloatValue(currentOutData, dataIndex, floatVal);
 
                         strtypelistIndex++;
                         dataIndex += 4;
@@ -372,27 +276,12 @@ internal class RecordsConversion
                         var stringVal = recordData.Value[f].ToString();
                         Log.Debug($"{wdbVars.Fields[f]}: {stringVal}");
 
-                        if (stringVal != "")
-                        {
-                            if (!wdbVars.ProcessedStringsDict.ContainsKey(stringVal))
-                            {
-                                wdbVars.ProcessedStringsDict.Add(stringVal, stringPos);
-                                addedString = true;
-                            }
-
-                            var stringPosBytes = BitConverter.GetBytes(wdbVars.ProcessedStringsDict[stringVal]);
-
-                            currentOutData[dataIndex] = stringPosBytes[3];
-                            currentOutData[dataIndex + 1] = stringPosBytes[2];
-                            currentOutData[dataIndex + 2] = stringPosBytes[1];
-                            currentOutData[dataIndex + 3] = stringPosBytes[0];
-
-                            if (addedString)
-                            {
-                                stringPos += (uint)Encoding.UTF8.GetByteCount(stringVal + "\0");
-                                addedString = false;
-                            }
-                        }
+                        stringPos = RecordConversionHelper.ProcessStringField(
+                            currentOutData,
+                            dataIndex,
+                            stringVal,
+                            wdbVars.ProcessedStringsDict,
+                            stringPos);
 
                         strtypelistIndex++;
                         dataIndex += 4;
@@ -403,12 +292,7 @@ internal class RecordsConversion
                         var uintVal = Convert.ToUInt32(recordData.Value[f]);
                         Log.Debug($"{wdbVars.Fields[f]}: {uintVal}");
 
-                        var uintValBytes = BitConverter.GetBytes(uintVal);
-
-                        currentOutData[dataIndex] = uintValBytes[3];
-                        currentOutData[dataIndex + 1] = uintValBytes[2];
-                        currentOutData[dataIndex + 2] = uintValBytes[1];
-                        currentOutData[dataIndex + 3] = uintValBytes[0];
+                        RecordConversionHelper.WriteUInt32Value(currentOutData, dataIndex, uintVal);
 
                         strtypelistIndex++;
                         dataIndex += 4;

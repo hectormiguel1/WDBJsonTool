@@ -1,7 +1,8 @@
-﻿using System.Text.Json;
-using WDBJsonTool.Support;
-using WDBJsonTool.Extensions;
+using System.Text.Json;
 using WDBJsonTool.Common;
+using WDBJsonTool.Common.FieldProcessors;
+using WDBJsonTool.Extensions;
+using WDBJsonTool.Support;
 
 namespace WDBJsonTool.XIII.Extraction;
 internal class RecordsParser
@@ -68,20 +69,18 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {iTypedataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
@@ -103,20 +102,18 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {uTypeDataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
 
@@ -138,20 +135,18 @@ internal class RecordsParser
                                         fieldBitsToProcess = 0;
                                         continue;
                                     }
-                                    else
+
+                                    binaryDataIndex -= fieldNum;
+
+                                    fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                    fieldBitsToProcess -= fieldNum;
+
+                                    Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                    jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
+
+                                    if (fieldBitsToProcess != 0)
                                     {
-                                        binaryDataIndex -= fieldNum;
-
-                                        fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
-                                        fieldBitsToProcess -= fieldNum;
-
-                                        Log.Debug($"{wdbVars.Fields[f]}: {fTypeDataVal}");
-                                        jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
-
-                                        if (fieldBitsToProcess != 0)
-                                        {
-                                            f++;
-                                        }
+                                        f++;
                                     }
                                     break;
                             }
@@ -163,10 +158,11 @@ internal class RecordsParser
 
                     // float value
                     case (int)WdbFieldType.Float:
-                        var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
-
-                        Log.Debug($"{wdbVars.Fields[f]}: {floatDataVal}");
-                        jsonWriter.WriteNumber(wdbVars.Fields[f], floatDataVal);
+                        FieldProcessorHelper.ProcessFloatField(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex,
+                            wdbVars.Fields[f],
+                            jsonWriter);
 
                         strtypelistIndex++;
                         currentRecordDataIndex += 4;
@@ -174,7 +170,9 @@ internal class RecordsParser
 
                     // !!string section offset
                     case (int)WdbFieldType.String:
-                        var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
+                        var stringDataOffset = FieldProcessorHelper.ExtractStringOffset(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex);
                         var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
                         Log.Debug($"{wdbVars.Fields[f]}: {derivedString}");
@@ -188,24 +186,24 @@ internal class RecordsParser
                     case (int)WdbFieldType.UInt:
                         if (wdbVars.Fields[f].StartsWith("u64"))
                         {
-                            var processArray = new byte[8];
-                            Array.ConstrainedCopy(currentRecordData, currentRecordDataIndex, processArray, 0, 8);
-                            Array.Reverse(processArray);
-
-                            var ulTypeDataVal = BitConverter.ToUInt64(processArray, 0);
-
-                            Log.Debug($"{wdbVars.Fields[f]}(uint64): {ulTypeDataVal}");
-                            jsonWriter.WriteNumber($"{wdbVars.Fields[f]}(uint64)", ulTypeDataVal);
+                            FieldProcessorHelper.ProcessUIntField(
+                                currentRecordData.AsSpan(),
+                                currentRecordDataIndex,
+                                $"{wdbVars.Fields[f]}(uint64)",
+                                jsonWriter,
+                                is64Bit: true);
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 8;
                             break;
                         }
 
-                        var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
-
-                        Log.Debug($"{wdbVars.Fields[f]}: {uintDataVal}");
-                        jsonWriter.WriteNumber(wdbVars.Fields[f], uintDataVal);
+                        FieldProcessorHelper.ProcessUIntField(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex,
+                            wdbVars.Fields[f],
+                            jsonWriter,
+                            is64Bit: false);
 
                         strtypelistIndex++;
                         currentRecordDataIndex += 4;

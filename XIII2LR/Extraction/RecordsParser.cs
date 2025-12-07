@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
-using WDBJsonTool.Support;
-using WDBJsonTool.Extensions;
-
+using System.Text.Json;
 using WDBJsonTool.Common;
+using WDBJsonTool.Common.FieldProcessors;
+using WDBJsonTool.Extensions;
+using WDBJsonTool.Support;
+
 namespace WDBJsonTool.XIII2LR.Extraction;
 internal class RecordsParser
 {
@@ -203,10 +204,11 @@ internal class RecordsParser
 
                     // float value
                     case (int)WdbFieldType.Float:
-                        var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
-
-                        Log.Debug($"{wdbVars.Fields[f]}: {floatDataVal}");
-                        jsonWriter.WriteNumber(wdbVars.Fields[f], floatDataVal);
+                        FieldProcessorHelper.ProcessFloatField(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex,
+                            wdbVars.Fields[f],
+                            jsonWriter);
 
                         strtypelistIndex++;
                         currentRecordDataIndex += 4;
@@ -214,7 +216,9 @@ internal class RecordsParser
 
                     // !!string section offset
                     case (int)WdbFieldType.String:
-                        var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
+                        var stringDataOffset = FieldProcessorHelper.ExtractStringOffset(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex);
                         var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
                         Log.Debug($"{wdbVars.Fields[f]}: {derivedString}");
@@ -226,10 +230,12 @@ internal class RecordsParser
 
                     // uint value
                     case (int)WdbFieldType.UInt:
-                        var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
-
-                        Log.Debug($"{wdbVars.Fields[f]}: {uintDataVal}");
-                        jsonWriter.WriteNumber(wdbVars.Fields[f], uintDataVal);
+                        FieldProcessorHelper.ProcessUIntField(
+                            currentRecordData.AsSpan(),
+                            currentRecordDataIndex,
+                            wdbVars.Fields[f],
+                            jsonWriter,
+                            is64Bit: false);
 
                         strtypelistIndex++;
                         currentRecordDataIndex += 4;
