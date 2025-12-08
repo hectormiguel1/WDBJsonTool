@@ -1,24 +1,20 @@
 ﻿using WDBJsonTool.Support;
-using WDBJsonTool.DataStructures; // Added
-using WDBJsonTool; // Added
+using WDBJsonTool.DataStructures;
+using WDBJsonTool;
 
 namespace WDBJsonTool.XIII2LR.Extraction
 {
     internal class ExtractionMain
     {
-        public static void StartExtraction(string inWDBfile)
+        public static WDBFile StartExtraction(string inWDBfile)
         {
             var wdbVars = new WDBVariablesXIII2LR();
             
-            // Instantiate WDBFile
             WDBFile wdbFile = new WDBFile();
             wdbFile.WDBName = Path.GetFileNameWithoutExtension(inWDBfile);
 
             using (var wdbReader = new BinaryReader(File.Open(inWDBfile, FileMode.Open, FileAccess.Read, FileShare.Read)))
             {
-                // wdbVars.JsonFilePath is no longer directly used for writing in this method.
-                // It's passed to JsonWriter.WriteWDBFileToJson
-
                 _ = wdbReader.BaseStream.Position = 0;
                 if (wdbReader.ReadBytesString(3, false) != "WPD")
                 {
@@ -39,23 +35,19 @@ namespace WDBJsonTool.XIII2LR.Extraction
                 Log.Info($"Total records: {wdbVars.RecordCount}");
                 Log.Info("");
 
-                // Populate WDBFile.Sections from SectionsParser
                 wdbFile.Sections[JsonVariables.HeaderSectionToken] = SectionsParser.ParseSectionsToWDBSection(wdbVars);
 
                 Log.Info("Parsing records....");
                 Log.Info("");
                 Thread.Sleep(1000);
 
-                // Populate WDBFile.Records from RecordsParser
                 wdbFile.Records = RecordsParser.ProcessRecords(wdbReader, wdbVars);
-                
-                // Write the complete WDBFile to JSON
-                JsonWriter.WriteWDBFileToJson(wdbFile, Path.Combine(Path.GetDirectoryName(inWDBfile), wdbFile.WDBName + ".json"));
             }
 
             Log.Info("");
             Log.Info("");
-            Log.Info("Finished extracting wdb data to json file");
+            Log.Info("Finished extracting wdb data to json file"); // Keep this log for now, can be removed later if it's confusing.
+            return wdbFile;
         }
     }
 }
