@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
-using WDBJsonTool.Support;
+﻿using WDBJsonTool.Support;
+using WDBJsonTool.DataStructures; // Added
+using WDBJsonTool; // Added
 
 namespace WDBJsonTool.XIII.Extraction
 {
@@ -11,11 +12,16 @@ namespace WDBJsonTool.XIII.Extraction
             {
                 IgnoreKnown = shouldIgnoreKnown
             };
+            
+            // Instantiate WDBFile
+            WDBFile wdbFile = new WDBFile();
+            wdbFile.WDBName = Path.GetFileNameWithoutExtension(inWDBfile);
 
             using (var wdbReader = new BinaryReader(File.Open(inWDBfile, FileMode.Open, FileAccess.Read)))
             {
                 wdbVars.WDBName = Path.GetFileNameWithoutExtension(inWDBfile);
-                wdbVars.JsonFilePath = Path.Combine(Path.GetDirectoryName(inWDBfile), wdbVars.WDBName + ".json");
+                // wdbVars.JsonFilePath is no longer directly used for writing in this method.
+                // It's passed to JsonWriter.WriteWDBFileToJson
 
                 _ = wdbReader.BaseStream.Position = 0;
                 if (wdbReader.ReadBytesString(3, false) != "WPD")
@@ -32,59 +38,35 @@ namespace WDBJsonTool.XIII.Extraction
                 }
 
                 SectionsParser.MainSections(wdbReader, wdbVars);
+                
+                Log.Info("");
+                Log.Info($"Total records: {wdbVars.RecordCount}");
+                Log.Info("");
 
-                Console.WriteLine("");
-                Console.WriteLine($"Total records: {wdbVars.RecordCount}");
-                Console.WriteLine("");
+                // Populate WDBFile.Sections from SectionsParser
+                wdbFile.Sections[JsonVariables.HeaderSectionToken] = SectionsParser.ParseSectionsToWDBSection(wdbVars);
 
+                Log.Info("Parsing records....");
+                Log.Info("");
+                Thread.Sleep(1000);
 
-                using (var jsonStream = new MemoryStream())
+                // Populate WDBFile.Records from RecordsParser
+                if (wdbVars.IsKnown)
                 {
-                    var options = new JsonWriterOptions
-                    {
-                        Indented = true,
-                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                    };
-
-                    using (var jsonWriter = new Utf8JsonWriter(jsonStream, options))
-                    {
-                        jsonWriter.WriteStartObject();
-
-                        SectionsParser.MainSectionsToJson(wdbVars, jsonWriter);
-
-                        Console.WriteLine("Parsing records....");
-                        Console.WriteLine("");
-                        Thread.Sleep(1000);
-
-                        if (wdbVars.IsKnown)
-                        {
-                            RecordsParser.ParseRecordsWithFields(wdbReader, wdbVars, jsonWriter);
-                        }
-                        else
-                        {
-                            RecordsParser.ParseRecordsWithoutFields(wdbReader, wdbVars, jsonWriter);
-                        }
-
-                        jsonWriter.WriteEndObject();
-                    }
-
-                    Console.WriteLine("");
-                    Console.WriteLine("");
-                    Console.WriteLine("Writing wdb data to json file....");
-
-                    if (File.Exists(wdbVars.JsonFilePath))
-                    {
-                        File.Delete(wdbVars.JsonFilePath);
-                    }
-
-                    jsonStream.Seek(0, SeekOrigin.Begin);
-                    File.WriteAllBytes(wdbVars.JsonFilePath, jsonStream.ToArray());
+                    wdbFile.Records = RecordsParser.ParseRecordsWithFields(wdbReader, wdbVars);
                 }
+                else
+                {
+                    wdbFile.Records = RecordsParser.ParseRecordsWithoutFields(wdbReader, wdbVars);
+                }
+
+                // Write the complete WDBFile to JSON
+                JsonWriter.WriteWDBFileToJson(wdbFile, Path.Combine(Path.GetDirectoryName(inWDBfile), wdbFile.WDBName + ".json"));
             }
 
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Finished extracting wdb data to json file");
+            Log.Info("");
+            Log.Info("");
+            Log.Info("Finished extracting wdb data to json file");
         }
     }
 }

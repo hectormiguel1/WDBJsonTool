@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using System.Text.Json;
 using WDBJsonTool.Support;
+using WDBJsonTool.DataStructures; // Added
+using WDBJsonTool; // Added
 
 namespace WDBJsonTool.XIII2LR.Extraction
 {
@@ -119,11 +121,11 @@ namespace WDBJsonTool.XIII2LR.Extraction
                 wdbVars.SheetName = "Not Specified";
             }
 
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
-            Console.WriteLine("");
-            Console.WriteLine("");
+            Log.Info(""); // Replaced Console.WriteLine
+            Log.Info(""); // Replaced Console.WriteLine
+            Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}"); // Replaced Console.WriteLine
+            Log.Info(""); // Replaced Console.WriteLine
+            Log.Info(""); // Replaced Console.WriteLine
 
 
             // Process !structitem data
@@ -149,21 +151,23 @@ namespace WDBJsonTool.XIII2LR.Extraction
             // data
             if (wdbVars.HasStrArraySection)
             {
-                Console.WriteLine($"Organizing {wdbVars.StrArraySectionName} data....");
+                Log.Info($"Organizing {wdbVars.StrArraySectionName} data...."); // Replaced Console.WriteLine
 
                 StrArrayParser.ArrangeArrayData(wdbVars);
 
-                Console.WriteLine("");
-                Console.WriteLine("");
+                Log.Info(""); // Replaced Console.WriteLine
+                Log.Info(""); // Replaced Console.WriteLine
             }
         }
 
 
-        public static void MainSectionsToJson(WDBVariablesXIII2LR wdbVars, Utf8JsonWriter jsonWriter)
+        public static WDBSection ParseSectionsToWDBSection(WDBVariablesXIII2LR wdbVars)
         {
-            jsonWriter.WriteNumber(JsonVariables.RecordCountToken, wdbVars.RecordCount);
-            jsonWriter.WriteString(wdbVars.SheetNameSectionName, wdbVars.SheetName);
-            jsonWriter.WriteBoolean(JsonVariables.HasStrArrayToken, wdbVars.HasStrArraySection);
+            WDBSection sectionData = new WDBSection();
+
+            sectionData[JsonVariables.RecordCountToken] = wdbVars.RecordCount;
+            sectionData[wdbVars.SheetNameSectionName] = wdbVars.SheetName;
+            sectionData[JsonVariables.HasStrArrayToken] = wdbVars.HasStrArraySection;
 
 
             // Write array info values
@@ -171,22 +175,15 @@ namespace WDBJsonTool.XIII2LR.Extraction
             // present
             if (wdbVars.HasStrArraySection)
             {
-                jsonWriter.WriteNumber(JsonVariables.BitsPerOffsetToken, wdbVars.BitsPerOffset);
-                jsonWriter.WriteNumber(JsonVariables.OffsetsPerValueToken, wdbVars.OffsetsPerValue);
+                sectionData[JsonVariables.BitsPerOffsetToken] = wdbVars.BitsPerOffset;
+                sectionData[JsonVariables.OffsetsPerValueToken] = wdbVars.OffsetsPerValue;
             }
 
 
             // Parse and write the strtypelistData
-            jsonWriter.WriteBoolean(JsonVariables.IsStrTypelistV1Token, wdbVars.ParseStrtypelistAsV1);
+            sectionData[JsonVariables.IsStrTypelistV1Token] = wdbVars.ParseStrtypelistAsV1;
 
-            if (wdbVars.ParseStrtypelistAsV1)
-            {
-                jsonWriter.WriteStartArray(wdbVars.StrtypelistSectionName);
-            }
-            else
-            {
-                jsonWriter.WriteStartArray(wdbVars.StrtypelistbSectionName);
-            }
+            List<int> strtypelistValues = new List<int>(); // Using List<int> to store values
 
             var strtypelistbIndex = 0;
             var currentStrtypelistData = new byte[4];
@@ -207,19 +204,26 @@ namespace WDBJsonTool.XIII2LR.Extraction
                     strtypelistValue = wdbVars.StrtypelistData[strtypelistbIndex];
                 }
 
-                wdbVars.StrtypelistValues.Add(strtypelistValue);
-                jsonWriter.WriteNumberValue(strtypelistValue);
+                wdbVars.StrtypelistValues.Add(strtypelistValue); // Keep this to populate wdbVars
+                strtypelistValues.Add(strtypelistValue); // Add to the new list
                 strtypelistbIndex += strtypelistIndexAdjust;
             }
 
-            jsonWriter.WriteEndArray();
+            if (wdbVars.ParseStrtypelistAsV1)
+            {
+                sectionData[wdbVars.StrtypelistSectionName] = strtypelistValues;
+            }
+            else
+            {
+                sectionData[wdbVars.StrtypelistbSectionName] = strtypelistValues;
+            }
 
 
             // Write all the typelist data
-            jsonWriter.WriteBoolean(JsonVariables.HasTypelistToken, wdbVars.HasTypelistSection);
+            sectionData[JsonVariables.HasTypelistToken] = wdbVars.HasTypelistSection;
             if (wdbVars.HasTypelistSection)
             {
-                jsonWriter.WriteStartArray(wdbVars.TypelistSectionName);
+                List<int> typelistValues = new List<int>(); // Using List<int> to store values
 
                 var typelistbIndex = 0;
                 var currentTypelistData = new byte[4];
@@ -231,27 +235,29 @@ namespace WDBJsonTool.XIII2LR.Extraction
                     Array.Reverse(currentTypelistData);
                     typelistValue = (int)BitConverter.ToUInt32(currentTypelistData, 0);
 
-                    jsonWriter.WriteNumberValue(typelistValue);
+                    typelistValues.Add(typelistValue); // Add to the new list
                     typelistbIndex += 4;
                 }
 
-                jsonWriter.WriteEndArray();
+                sectionData[wdbVars.TypelistSectionName] = typelistValues;
             }
 
 
             // Write version data
-            jsonWriter.WriteNumber(wdbVars.VersionSectionName, SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true));
+            sectionData[wdbVars.VersionSectionName] = SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true);
 
 
             // Write structitem data
-            jsonWriter.WriteStartArray(wdbVars.StructItemSectionName);
+            List<string> fields = new List<string>(); // Using List<string> to store values
 
             for (int i = 0; i < wdbVars.FieldCount; i++)
             {
-                jsonWriter.WriteStringValue(wdbVars.Fields[i]);
+                fields.Add(wdbVars.Fields[i]); // Add to the new list
             }
 
-            jsonWriter.WriteEndArray();
+            sectionData[wdbVars.StructItemSectionName] = fields;
+
+            return sectionData;
         }
     }
 }

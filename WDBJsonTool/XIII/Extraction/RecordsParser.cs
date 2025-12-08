@@ -1,14 +1,15 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using WDBJsonTool.Support;
+using WDBJsonTool.DataStructures;
+using WDBJsonTool;
 
 namespace WDBJsonTool.XIII.Extraction
 {
     internal class RecordsParser
     {
-        public static void ParseRecordsWithFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars, Utf8JsonWriter jsonWriter)
+        public static List<WDBRecord> ParseRecordsWithFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars)
         {
-            // Process each record's data
-            jsonWriter.WriteStartArray(JsonVariables.RecordsArrayToken);
+            List<WDBRecord> records = new List<WDBRecord>();
 
             var sectionPos = wdbReader.BaseStream.Position;
             string currentRecordName;
@@ -18,13 +19,13 @@ namespace WDBJsonTool.XIII.Extraction
 
             for (int r = 0; r < wdbVars.RecordCount; r++)
             {
-                jsonWriter.WriteStartObject();
+                WDBRecord currentRecord = new WDBRecord();
 
                 _ = wdbReader.BaseStream.Position = sectionPos;
                 currentRecordName = wdbReader.ReadBytesString(16, false);
 
-                Console.WriteLine($"Record: {currentRecordName}");
-                jsonWriter.WriteString(JsonVariables.RecordToken, currentRecordName);
+                Log.Info($"Record: {currentRecordName}");
+                currentRecord[JsonVariables.RecordToken] = currentRecordName;
 
                 currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
@@ -56,8 +57,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {iTypedataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = iTypedataVal;
 
                                             break;
                                         }
@@ -74,8 +75,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {iTypedataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], iTypedataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = iTypedataVal;
 
                                             if (fieldBitsToProcess != 0)
                                             {
@@ -91,8 +92,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = uTypeDataVal;
 
                                             break;
                                         }
@@ -109,8 +110,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], uTypeDataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = uTypeDataVal;
 
                                             if (fieldBitsToProcess != 0)
                                             {
@@ -126,8 +127,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = fTypeDataVal;
 
                                             break;
                                         }
@@ -144,8 +145,8 @@ namespace WDBJsonTool.XIII.Extraction
                                             fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Console.WriteLine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
-                                            jsonWriter.WriteNumber(wdbVars.Fields[f], fTypeDataVal);
+                                            Log.Info($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                            currentRecord[wdbVars.Fields[f]] = fTypeDataVal;
 
                                             if (fieldBitsToProcess != 0)
                                             {
@@ -164,8 +165,8 @@ namespace WDBJsonTool.XIII.Extraction
                         case 1:
                             var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {floatDataVal}");
-                            jsonWriter.WriteNumber(wdbVars.Fields[f], floatDataVal);
+                            Log.Info($"{wdbVars.Fields[f]}: {floatDataVal}");
+                            currentRecord[wdbVars.Fields[f]] = floatDataVal;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -176,8 +177,8 @@ namespace WDBJsonTool.XIII.Extraction
                             var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                             var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {derivedString}");
-                            jsonWriter.WriteString(wdbVars.Fields[f], derivedString);
+                            Log.Info($"{wdbVars.Fields[f]}: {derivedString}");
+                            currentRecord[wdbVars.Fields[f]] = derivedString;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -193,8 +194,8 @@ namespace WDBJsonTool.XIII.Extraction
 
                                 var ulTypeDataVal = BitConverter.ToUInt64(processArray, 0);
 
-                                Console.WriteLine($"{wdbVars.Fields[f]}(uint64): {ulTypeDataVal}");
-                                jsonWriter.WriteNumber($"{wdbVars.Fields[f]}(uint64)", ulTypeDataVal);
+                                Log.Info($"{wdbVars.Fields[f]}(uint64): {ulTypeDataVal}");
+                                currentRecord[$"{wdbVars.Fields[f]}(uint64)"] = ulTypeDataVal;
 
                                 strtypelistIndex++;
                                 currentRecordDataIndex += 8;
@@ -203,8 +204,8 @@ namespace WDBJsonTool.XIII.Extraction
 
                             var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Console.WriteLine($"{wdbVars.Fields[f]}: {uintDataVal}");
-                            jsonWriter.WriteNumber(wdbVars.Fields[f], uintDataVal);
+                            Log.Info($"{wdbVars.Fields[f]}: {uintDataVal}");
+                            currentRecord[wdbVars.Fields[f]] = uintDataVal;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -212,23 +213,22 @@ namespace WDBJsonTool.XIII.Extraction
                     }
                 }
 
-                jsonWriter.WriteEndObject();
+                records.Add(currentRecord);
 
-                Console.WriteLine("");
+                Log.Info("");
 
                 strtypelistIndex = 0;
                 currentRecordDataIndex = 0;
                 sectionPos += 32;
             }
 
-            jsonWriter.WriteEndArray();
+            return records;
         }
 
 
-        public static void ParseRecordsWithoutFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars, Utf8JsonWriter jsonWriter)
+        public static List<WDBRecord> ParseRecordsWithoutFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars)
         {
-            // Process each record's data
-            jsonWriter.WriteStartArray(JsonVariables.RecordsArrayToken);
+            List<WDBRecord> records = new List<WDBRecord>();
 
             var sectionPos = wdbReader.BaseStream.Position;
             string currentRecordName;
@@ -238,13 +238,13 @@ namespace WDBJsonTool.XIII.Extraction
 
             for (int r = 0; r < wdbVars.RecordCount; r++)
             {
-                jsonWriter.WriteStartObject();
+                WDBRecord currentRecord = new WDBRecord();
 
                 _ = wdbReader.BaseStream.Position = sectionPos;
                 currentRecordName = wdbReader.ReadBytesString(16, false);
 
-                Console.WriteLine($"Record: {currentRecordName}");
-                jsonWriter.WriteString(JsonVariables.RecordToken, currentRecordName);
+                Log.Info($"Record: {currentRecordName}");
+                currentRecord[JsonVariables.RecordToken] = currentRecordName;
 
                 currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
@@ -262,8 +262,8 @@ namespace WDBJsonTool.XIII.Extraction
                             var bitpackedData = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                             var hexDataVal = "0x" + bitpackedData.ToString("X").PadLeft(8, '0');
 
-                            Console.WriteLine($"bitpacked-field_{bitpackedFieldCounter}: {hexDataVal}");
-                            jsonWriter.WriteString($"bitpacked-field_{bitpackedFieldCounter}", hexDataVal);
+                            Log.Info($"bitpacked-field_{bitpackedFieldCounter}: {hexDataVal}");
+                            currentRecord[$"bitpacked-field_{bitpackedFieldCounter}"] = hexDataVal;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -274,8 +274,8 @@ namespace WDBJsonTool.XIII.Extraction
                         case 1:
                             var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Console.WriteLine($"float-field_{floatFieldCounter}: {floatDataVal}");
-                            jsonWriter.WriteNumber($"float-field_{floatFieldCounter}", floatDataVal);
+                            Log.Info($"float-field_{floatFieldCounter}: {floatDataVal}");
+                            currentRecord[$"float-field_{floatFieldCounter}"] = floatDataVal;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -287,8 +287,8 @@ namespace WDBJsonTool.XIII.Extraction
                             var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
                             var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
-                            Console.WriteLine($"!!string-field_{stringFieldCounter}: {derivedString}");
-                            jsonWriter.WriteString($"!!string-field_{stringFieldCounter}", derivedString);
+                            Log.Info($"!!string-field_{stringFieldCounter}: {derivedString}");
+                            currentRecord[$"!!string-field_{stringFieldCounter}"] = derivedString;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -299,8 +299,8 @@ namespace WDBJsonTool.XIII.Extraction
                         case 3:
                             var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Console.WriteLine($"uint-field_{uintFieldCounter}: {uintDataVal}");
-                            jsonWriter.WriteNumber($"uint-field_{uintFieldCounter}", uintDataVal);
+                            Log.Info($"uint-field_{uintFieldCounter}: {uintDataVal}");
+                            currentRecord[$"uint-field_{uintFieldCounter}"] = uintDataVal;
 
                             strtypelistIndex++;
                             currentRecordDataIndex += 4;
@@ -309,16 +309,16 @@ namespace WDBJsonTool.XIII.Extraction
                     }
                 }
 
-                jsonWriter.WriteEndObject();
+                records.Add(currentRecord);
 
-                Console.WriteLine("");
+                Log.Info("");
 
                 strtypelistIndex = 0;
                 currentRecordDataIndex = 0;
                 sectionPos += 32;
             }
 
-            jsonWriter.WriteEndArray();
+            return records;
         }
     }
 }

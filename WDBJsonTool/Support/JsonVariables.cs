@@ -10,6 +10,7 @@
         public readonly static string OffsetsPerValueToken = "offsetsPerValue";
         public readonly static string IsStrTypelistV1Token = "isStrTypelistV1";
         public readonly static string HasTypelistToken = "hasTypelist";
+        public readonly static string HeaderSectionToken = "header"; // Added
         public readonly static string RecordsArrayToken = "records";
         public readonly static string RecordToken = "record";
     }
