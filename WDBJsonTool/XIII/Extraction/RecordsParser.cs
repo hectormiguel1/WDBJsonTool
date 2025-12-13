@@ -5,43 +5,41 @@ using WDBJsonTool;
 
 namespace WDBJsonTool.XIII.Extraction
 {
-    internal class RecordsParser
+    internal static class RecordsParser
     {
         public static List<WDBRecord> ParseRecordsWithFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars)
         {
-            List<WDBRecord> records = new List<WDBRecord>();
+            Log.Fine(
+                $"Starting ParseRecordsWithFields for {wdbVars.RecordCount} records with {wdbVars.FieldCount} fields.");
+            List<WDBRecord> records = [];
 
             var sectionPos = wdbReader.BaseStream.Position;
-            string currentRecordName;
-            byte[] currentRecordData;
             var strtypelistIndex = 0;
             var currentRecordDataIndex = 0;
 
-            for (int r = 0; r < wdbVars.RecordCount; r++)
+            for (var r = 0; r < wdbVars.RecordCount; r++)
             {
-                WDBRecord currentRecord = new WDBRecord();
+                var currentRecord = new WDBRecord();
 
                 _ = wdbReader.BaseStream.Position = sectionPos;
-                currentRecordName = wdbReader.ReadBytesString(16, false);
+                var currentRecordName = wdbReader.ReadBytesString(16, false);
 
-                Log.Info($"Record: {currentRecordName}");
+                Log.Fine($"Processing Record {r + 1}/{wdbVars.RecordCount}: {currentRecordName}");
                 currentRecord[JsonVariables.RecordToken] = currentRecordName;
 
-                currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
+                var currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
-                for (int f = 0; f < wdbVars.FieldCount; f++)
+                for (var f = 0; f < wdbVars.FieldCount; f++)
                 {
                     switch (wdbVars.StrtypelistValues[strtypelistIndex])
                     {
                         // bitpacked
                         case 0:
-                            var binaryData = BitOperationHelpers.UIntToBinary(SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true));
+                            var binaryData = BitOperationHelpers.UIntToBinary(
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true));
                             var binaryDataIndex = binaryData.Length;
                             var fieldBitsToProcess = 32;
-
-                            int iTypedataVal;
-                            uint uTypeDataVal;
-                            int fTypeDataVal;
 
                             while (fieldBitsToProcess != 0 && f < wdbVars.FieldCount)
                             {
@@ -52,16 +50,19 @@ namespace WDBJsonTool.XIII.Extraction
                                 {
                                     // sint
                                     case "i":
+                                        int iTypedataVal;
                                         if (fieldNum == 0)
                                         {
-                                            iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                            iTypedataVal =
+                                                BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {iTypedataVal}");
                                             currentRecord[wdbVars.Fields[f]] = iTypedataVal;
 
                                             break;
                                         }
+
                                         if (fieldNum > fieldBitsToProcess)
                                         {
                                             f--;
@@ -72,10 +73,11 @@ namespace WDBJsonTool.XIII.Extraction
                                         {
                                             binaryDataIndex -= fieldNum;
 
-                                            iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                            iTypedataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex,
+                                                fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {iTypedataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {iTypedataVal}");
                                             currentRecord[wdbVars.Fields[f]] = iTypedataVal;
 
                                             if (fieldBitsToProcess != 0)
@@ -83,20 +85,24 @@ namespace WDBJsonTool.XIII.Extraction
                                                 f++;
                                             }
                                         }
+
                                         break;
 
                                     // uint 
                                     case "u":
+                                        uint uTypeDataVal;
                                         if (fieldNum == 0)
                                         {
-                                            uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex - 32, 32);
+                                            uTypeDataVal =
+                                                BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
                                             currentRecord[wdbVars.Fields[f]] = uTypeDataVal;
 
                                             break;
                                         }
+
                                         if (fieldNum > fieldBitsToProcess)
                                         {
                                             f--;
@@ -107,10 +113,11 @@ namespace WDBJsonTool.XIII.Extraction
                                         {
                                             binaryDataIndex -= fieldNum;
 
-                                            uTypeDataVal = BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
+                                            uTypeDataVal =
+                                                BitOperationHelpers.BinaryToUInt(binaryData, binaryDataIndex, fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {uTypeDataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {uTypeDataVal}");
                                             currentRecord[wdbVars.Fields[f]] = uTypeDataVal;
 
                                             if (fieldBitsToProcess != 0)
@@ -118,20 +125,24 @@ namespace WDBJsonTool.XIII.Extraction
                                                 f++;
                                             }
                                         }
+
                                         break;
 
                                     // float (bitpacked as int)
                                     case "f":
+                                        int fTypeDataVal;
                                         if (fieldNum == 0)
                                         {
-                                            fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
+                                            fTypeDataVal =
+                                                BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex - 32, 32);
                                             fieldBitsToProcess = 0;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
                                             currentRecord[wdbVars.Fields[f]] = fTypeDataVal;
 
                                             break;
                                         }
+
                                         if (fieldNum > fieldBitsToProcess)
                                         {
                                             f--;
@@ -142,10 +153,11 @@ namespace WDBJsonTool.XIII.Extraction
                                         {
                                             binaryDataIndex -= fieldNum;
 
-                                            fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex, fieldNum);
+                                            fTypeDataVal = BitOperationHelpers.BinaryToInt(binaryData, binaryDataIndex,
+                                                fieldNum);
                                             fieldBitsToProcess -= fieldNum;
 
-                                            Log.Info($"{wdbVars.Fields[f]}: {fTypeDataVal}");
+                                            Log.Fine($"{wdbVars.Fields[f]}: {fTypeDataVal}");
                                             currentRecord[wdbVars.Fields[f]] = fTypeDataVal;
 
                                             if (fieldBitsToProcess != 0)
@@ -153,6 +165,7 @@ namespace WDBJsonTool.XIII.Extraction
                                                 f++;
                                             }
                                         }
+
                                         break;
                                 }
                             }
@@ -163,9 +176,11 @@ namespace WDBJsonTool.XIII.Extraction
 
                         // float value
                         case 1:
-                            var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
+                            var floatDataVal =
+                                SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
 
-                            Log.Info($"{wdbVars.Fields[f]}: {floatDataVal}");
+                            Log.Fine($"{wdbVars.Fields[f]}: {floatDataVal}");
                             currentRecord[wdbVars.Fields[f]] = floatDataVal;
 
                             strtypelistIndex++;
@@ -174,10 +189,13 @@ namespace WDBJsonTool.XIII.Extraction
 
                         // !!string section offset
                         case 2:
-                            var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
-                            var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
+                            var stringDataOffset =
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
+                            var derivedString =
+                                SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
-                            Log.Info($"{wdbVars.Fields[f]}: {derivedString}");
+                            Log.Fine($"{wdbVars.Fields[f]}: {derivedString}");
                             currentRecord[wdbVars.Fields[f]] = derivedString;
 
                             strtypelistIndex++;
@@ -194,7 +212,7 @@ namespace WDBJsonTool.XIII.Extraction
 
                                 var ulTypeDataVal = BitConverter.ToUInt64(processArray, 0);
 
-                                Log.Info($"{wdbVars.Fields[f]}(uint64): {ulTypeDataVal}");
+                                Log.Fine($"{wdbVars.Fields[f]}(uint64): {ulTypeDataVal}");
                                 currentRecord[$"{wdbVars.Fields[f]}(uint64)"] = ulTypeDataVal;
 
                                 strtypelistIndex++;
@@ -202,9 +220,11 @@ namespace WDBJsonTool.XIII.Extraction
                                 break;
                             }
 
-                            var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
+                            var uintDataVal =
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
 
-                            Log.Info($"{wdbVars.Fields[f]}: {uintDataVal}");
+                            Log.Fine($"{wdbVars.Fields[f]}: {uintDataVal}");
                             currentRecord[wdbVars.Fields[f]] = uintDataVal;
 
                             strtypelistIndex++;
@@ -214,8 +234,6 @@ namespace WDBJsonTool.XIII.Extraction
                 }
 
                 records.Add(currentRecord);
-
-                Log.Info("");
 
                 strtypelistIndex = 0;
                 currentRecordDataIndex = 0;
@@ -227,96 +245,191 @@ namespace WDBJsonTool.XIII.Extraction
 
 
         public static List<WDBRecord> ParseRecordsWithoutFields(BinaryReader wdbReader, WDBVariablesXIII wdbVars)
+
+
         {
-            List<WDBRecord> records = new List<WDBRecord>();
+            Log.Fine(
+                $"Starting ParseRecordsWithoutFields for {wdbVars.RecordCount} records with {wdbVars.FieldCount} fields.");
+
+
+            List<WDBRecord> records = [];
 
             var sectionPos = wdbReader.BaseStream.Position;
-            string currentRecordName;
-            byte[] currentRecordData;
+
             var strtypelistIndex = 0;
+
             var currentRecordDataIndex = 0;
 
-            for (int r = 0; r < wdbVars.RecordCount; r++)
+            for (var r = 0; r < wdbVars.RecordCount; r++)
+
+
             {
-                WDBRecord currentRecord = new WDBRecord();
+                var currentRecord = new WDBRecord();
+
 
                 _ = wdbReader.BaseStream.Position = sectionPos;
-                currentRecordName = wdbReader.ReadBytesString(16, false);
 
-                Log.Info($"Record: {currentRecordName}");
+
+                var currentRecordName = wdbReader.ReadBytesString(16, false);
+
+
+                Log.Fine($"Processing Record {r + 1}/{wdbVars.RecordCount}: {currentRecordName}");
+
+
                 currentRecord[JsonVariables.RecordToken] = currentRecordName;
 
-                currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
+
+                var currentRecordData = SharedMethods.SaveSectionData(wdbReader, false);
 
                 var bitpackedFieldCounter = 0;
+
                 var floatFieldCounter = 0;
                 var stringFieldCounter = 0;
+
                 var uintFieldCounter = 0;
 
-                for (int f = 0; f < wdbVars.FieldCount; f++)
+                for (var f = 0; f < wdbVars.FieldCount; f++)
+
                 {
                     switch (wdbVars.StrtypelistValues[strtypelistIndex])
+                    
                     {
                         // bitpacked
+
                         case 0:
-                            var bitpackedData = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
+
+
+                            var bitpackedData =
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
+
+
                             var hexDataVal = "0x" + bitpackedData.ToString("X").PadLeft(8, '0');
 
-                            Log.Info($"bitpacked-field_{bitpackedFieldCounter}: {hexDataVal}");
+
+                            Log.Fine($"bitpacked-field_{bitpackedFieldCounter}: {hexDataVal}");
+
+
                             currentRecord[$"bitpacked-field_{bitpackedFieldCounter}"] = hexDataVal;
 
+
                             strtypelistIndex++;
+
+
                             currentRecordDataIndex += 4;
+
+
                             bitpackedFieldCounter++;
+
+
                             break;
+
 
                         // float value
-                        case 1:
-                            var floatDataVal = SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Log.Info($"float-field_{floatFieldCounter}: {floatDataVal}");
+
+                        case 1:
+
+
+                            var floatDataVal =
+                                SharedMethods.DeriveFloatFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
+
+
+                            Log.Fine($"float-field_{floatFieldCounter}: {floatDataVal}");
+
+
                             currentRecord[$"float-field_{floatFieldCounter}"] = floatDataVal;
 
+
                             strtypelistIndex++;
+
+
                             currentRecordDataIndex += 4;
+
+
                             floatFieldCounter++;
+
+
                             break;
+
 
                         // !!string section offset
-                        case 2:
-                            var stringDataOffset = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
-                            var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
 
-                            Log.Info($"!!string-field_{stringFieldCounter}: {derivedString}");
+
+                        case 2:
+
+
+                            var stringDataOffset =
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
+
+
+                            var derivedString =
+                                SharedMethods.DeriveStringFromArray(wdbVars.StringsData, (int)stringDataOffset);
+
+
+                            Log.Fine($"!!string-field_{stringFieldCounter}: {derivedString}");
+
+
                             currentRecord[$"!!string-field_{stringFieldCounter}"] = derivedString;
 
+
                             strtypelistIndex++;
+
+
                             currentRecordDataIndex += 4;
+
+
                             stringFieldCounter++;
+
+
                             break;
 
-                        // uint value
-                        case 3:
-                            var uintDataVal = SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex, true);
 
-                            Log.Info($"uint-field_{uintFieldCounter}: {uintDataVal}");
+                        // uint value
+
+
+                        case 3:
+
+
+                            var uintDataVal =
+                                SharedMethods.DeriveUIntFromSectionData(currentRecordData, currentRecordDataIndex,
+                                    true);
+
+
+                            Log.Fine($"uint-field_{uintFieldCounter}: {uintDataVal}");
+
+
                             currentRecord[$"uint-field_{uintFieldCounter}"] = uintDataVal;
 
+
                             strtypelistIndex++;
+
+
                             currentRecordDataIndex += 4;
+
+
                             uintFieldCounter++;
+
+
                             break;
                     }
                 }
 
+
                 records.Add(currentRecord);
 
-                Log.Info("");
 
                 strtypelistIndex = 0;
+
+
                 currentRecordDataIndex = 0;
+
+
                 sectionPos += 32;
             }
+
 
             return records;
         }

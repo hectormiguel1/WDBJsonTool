@@ -2,7 +2,7 @@
 
 namespace WDBJsonTool.XIII2LR.Extraction
 {
-    internal class StrArrayParser
+    internal static class StrArrayParser
     {
         public static void SubSections(BinaryReader wdbReader, WDBVariablesXIII2LR wdbVars)
         {
@@ -23,10 +23,9 @@ namespace WDBJsonTool.XIII2LR.Extraction
             wdbVars.BitsPerOffset = wdbReader.ReadByte();
             wdbVars.RecordCount--;
 
-            Console.WriteLine("[StrArray]");
-            Console.WriteLine($"Offsets per value: {wdbVars.OffsetsPerValue}");
-            Console.WriteLine($"Bits per offset: {wdbVars.BitsPerOffset}");
-            Console.WriteLine("");
+            Log.Finest("[StrArray]");
+            Log.Finest($"Offsets per value: {wdbVars.OffsetsPerValue}");
+            Log.Finest($"Bits per offset: {wdbVars.BitsPerOffset}");
 
 
             // !!strArrayList
@@ -40,11 +39,10 @@ namespace WDBJsonTool.XIII2LR.Extraction
         public static void ArrangeArrayData(WDBVariablesXIII2LR wdbVars)
         {
             // Collect all !!strArray Offsets
-            byte[] tmpReadArray;
 
-            for (int a = 0; a < wdbVars.StrArrayListData.Length; a += 4)
+            for (var a = 0; a < wdbVars.StrArrayListData.Length; a += 4)
             {
-                tmpReadArray = new byte[4];
+                var tmpReadArray = new byte[4];
                 Array.ConstrainedCopy(wdbVars.StrArrayListData, a, tmpReadArray, 0, 4);
 
                 Array.Reverse(tmpReadArray);
@@ -54,13 +52,12 @@ namespace WDBJsonTool.XIII2LR.Extraction
 
             // Process numbered s# fields in
             // !structitem data
-            int fieldNumber;
 
             foreach (var fieldItem in wdbVars.Fields)
             {
                 if (fieldItem.StartsWith("s"))
                 {
-                    fieldNumber = SharedMethods.DeriveFieldNumber(fieldItem);
+                    var fieldNumber = SharedMethods.DeriveFieldNumber(fieldItem);
 
                     if (fieldNumber != 0)
                     {
@@ -95,18 +92,13 @@ namespace WDBJsonTool.XIII2LR.Extraction
                             stringsStream.Seek(0, SeekOrigin.Begin);
 
 
-                            uint strArrayBinaryUInt = 0;
-                            var strArrayBinary = "";
-                            uint stringOffset = 0;
-                            var binaryReadPos = 0;
                             var arrayIterator = 0;
-                            var currentString = "";
                             uint currentArrayItemIndex = 0;
-                            bool buildArray = true;
+                            var buildArray = true;
 
                             foreach (var listOffset in wdbVars.StrArrayOffsets)
                             {
-                                wdbVars.ProcessStringsList = new List<string>();
+                                wdbVars.ProcessStringsList = [];
 
                                 while (buildArray)
                                 {
@@ -116,17 +108,17 @@ namespace WDBJsonTool.XIII2LR.Extraction
                                     //
                                     // 'binaryReadPos' value will be read from
                                     // right to left
-                                    strArrayBinaryUInt = strArrayReader.ReadBytesUInt32(true);
-                                    strArrayBinary = BitOperationHelpers.UIntToBinary(strArrayBinaryUInt);
-                                    binaryReadPos = strArrayBinary.Length - wdbVars.BitsPerOffset;
+                                    var strArrayBinaryUInt = strArrayReader.ReadBytesUInt32(true);
+                                    var strArrayBinary = strArrayBinaryUInt.UIntToBinary();
+                                    var binaryReadPos = strArrayBinary.Length - wdbVars.BitsPerOffset;
 
                                     // Get each offset's values
-                                    for (int o = 0; o < wdbVars.OffsetsPerValue; o++)
+                                    for (var o = 0; o < wdbVars.OffsetsPerValue; o++)
                                     {
-                                        stringOffset = BitOperationHelpers.BinaryToUInt(strArrayBinary, binaryReadPos, wdbVars.BitsPerOffset);
+                                        var stringOffset = BitOperationHelpers.BinaryToUInt(strArrayBinary, binaryReadPos, wdbVars.BitsPerOffset);
 
                                         stringsReader.BaseStream.Position = stringOffset;
-                                        currentString = stringsReader.ReadStringTillNull();
+                                        var currentString = stringsReader.ReadStringTillNull();
 
                                         //if (currentString == "")
                                         //{
@@ -155,19 +147,17 @@ namespace WDBJsonTool.XIII2LR.Extraction
                                 wdbVars.StrArrayDict.Add(wdbVars.NumStringFields[arrayIterator], wdbVars.ProcessStringsList);
                                 //Console.WriteLine($"Built [{wdbVars.NumStringFields[arrayIterator]}]");
 
-                                if (arrayIterator + 1 != wdbVars.StrArrayOffsets.Count)
-                                {
-                                    arrayIterator = wdbVars.StrArrayOffsets.IndexOf((uint)strArrayReader.BaseStream.Position);
+                                if (arrayIterator + 1 == wdbVars.StrArrayOffsets.Count) continue;
+                                arrayIterator = wdbVars.StrArrayOffsets.IndexOf((uint)strArrayReader.BaseStream.Position);
 
-                                    buildArray = true;
-                                }
+                                buildArray = true;
                             }
                         }
                     }
                 }
             }
 
-            Console.WriteLine($"Finished organizing {wdbVars.StrArraySectionName}");
+            Log.Fine($"Finished organizing {wdbVars.StrArraySectionName}");
         }
     }
 }

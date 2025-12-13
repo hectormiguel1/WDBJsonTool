@@ -48,8 +48,8 @@ namespace WDBJsonTool.Support
                     jsonUtf8Writer.WriteEndObject();
                 }
 
-                Log.Info("");
-                Log.Info("");
+    
+    
                 Log.Info("Writing wdb data to json file....");
 
                 if (File.Exists(jsonFilePath))
@@ -61,8 +61,8 @@ namespace WDBJsonTool.Support
                 File.WriteAllBytes(jsonFilePath, jsonStream.ToArray());
             }
 
-            Log.Info("");
-            Log.Info("");
+
+
             Log.Info("Finished extracting wdb data to json file");
         }
 

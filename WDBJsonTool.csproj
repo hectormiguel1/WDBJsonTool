@@ -10,6 +10,7 @@
     <Copyright>Copyright © Surihix 2025</Copyright>
     <FileVersion>2.0.0.0</FileVersion>
     <NativeLib>Shared</NativeLib>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,6 +21,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   
-  <Import Project="..\NativeLogger\NativeLogger.projitems" Label="Shared"/>
+  <Import Project="..\NativeCommons\NativeCommons.projitems" Label="Shared"/>
 
 </Project>

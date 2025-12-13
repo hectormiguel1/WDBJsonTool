@@ -16,7 +16,7 @@ namespace WDBJsonTool.DataStructures
     public class WDBFile
     {
         public Dictionary<string, WDBSection> Sections { get; set; } = new Dictionary<string, WDBSection>();
-        public List<WDBRecord> Records { get; set; } = new List<WDBRecord>();
+        public List<WDBRecord> Records { get; set; } = [];
         public string WDBName { get; set; }
         // Potentially other top-level metadata from the WDB file
     }

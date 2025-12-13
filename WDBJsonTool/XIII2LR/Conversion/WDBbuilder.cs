@@ -2,8 +2,78 @@
 
 namespace WDBJsonTool.XIII2LR.Conversion
 {
-    internal class WDBbuilder
+    internal abstract class WDBbuilder
     {
+        public static void BuildWDB(WDBJsonTool.DataStructures.WDBFile wdbFile, string filePath)
+        {
+            Console.WriteLine("");
+            Console.WriteLine("");
+            Console.WriteLine($"Building wdb file from WDBFile object to {filePath}....");
+
+            var wdbVars = new WDBVariablesXIII2LR();
+            // XIII2LR WDBVariables does not have a WDBName field directly, infer from filePath or use a default
+            wdbVars.WDBFilePath = filePath;
+
+            // TODO: Implement full conversion from WDBFile to WDBVariablesXIII2LR
+            // This will involve populating:
+            // - wdbVars.RecordCount
+            // - wdbVars.HasStrArraySection
+            // - wdbVars.HasStringSection
+            // - wdbVars.ParseStrtypelistAsV1
+            // - wdbVars.HasTypelistSection
+            // - wdbVars.Fields
+            // - wdbVars.StrArrayOffsets
+            // - wdbVars.NumStringFields
+            // - wdbVars.ProcessStringsList
+            // - wdbVars.StrArrayDict
+            // - wdbVars.StrtypelistValues
+            // - wdbVars.RecordCountWithSections
+            // - wdbVars.RecordsDataDict
+            // - wdbVars.ProcessedStringsDict
+            // - wdbVars.OutPerRecordData
+            // - wdbVars.SheetName
+            // - wdbVars.SheetNameData
+            // - wdbVars.StrArrayData
+            // - wdbVars.StrArrayInfoData
+            // - wdbVars.OffsetsPerValue
+            // - wdbVars.BitsPerOffset
+            // - wdbVars.StrArrayListData
+            // - wdbVars.StringsData
+            // - wdbVars.StrtypelistData
+            // - wdbVars.TypelistData
+            // - wdbVars.VersionData
+            // - wdbVars.StructItemData
+            // - wdbVars.StructItemNumData
+            // - wdbVars.FieldCount
+
+            // Temporary placeholder for essential fields to avoid immediate null reference issues
+            wdbVars.RecordCount = (uint)wdbFile.Records.Count;
+            wdbVars.RecordCountWithSections = (uint)wdbFile.Records.Count; // This will need to be calculated properly later
+
+            wdbVars.StrtypelistData = [];
+            wdbVars.TypelistData = [];
+            wdbVars.VersionData = [];
+            wdbVars.StringsData = []; // XIII2LR also has StringData
+
+            wdbVars.HasStringSection = false; // Default, needs to be derived from header
+            wdbVars.HasStrArraySection = false; // Default
+            wdbVars.HasTypelistSection = false; // Default
+            wdbVars.ParseStrtypelistAsV1 = false; // Default
+
+            // Populate RecordsDataDict
+            foreach (var record in wdbFile.Records)
+            {
+                List<object> recordValues =
+                [
+                    record
+                ];
+                wdbVars.RecordsDataDict.Add($"Record_{wdbVars.RecordsDataDict.Count}", recordValues);
+            }
+
+            // Call the original BuildWDB method with the populated WDBVariablesXIII2LR
+            BuildWDB(wdbVars);
+        }
+
         public static void BuildWDB(WDBVariablesXIII2LR wdbVars)
         {
             // Build base wdb file

@@ -1,14 +1,176 @@
 ﻿using System.Text;
+using WDBJsonTool.Support;
 
 namespace WDBJsonTool.XIII.Conversion
 {
-    internal class WDBbuilder
+    internal abstract class WDBbuilder
     {
+        public static void BuildWDB(DataStructures.WDBFile wdbFile, string filePath)
+        {
+
+            Log.Fine($"Building wdb file from WDBFile object to {filePath}....");
+
+            var wdbVars = new WDBVariablesXIII();
+            wdbVars.WDBName = wdbFile.WDBName;
+            wdbVars.WDBFilePath = filePath;
+            
+            // Access header section
+            if (!wdbFile.Sections.TryGetValue(JsonVariables.HeaderSectionToken, out var headerSection))
+            {
+                Log.Fatal("Header section not found in WDBFile.");
+                return;
+            }
+            
+            Log.Finest($"Loaded header sections: {headerSection}");
+            // Populate RecordCount
+            if (headerSection.TryGetValue(JsonVariables.RecordCountToken, out var recordCountObj))
+            {
+                wdbVars.RecordCount = Convert.ToUInt32(recordCountObj);
+            }
+            else
+            {
+                wdbVars.RecordCount = (uint)wdbFile.Records.Count;
+            }
+            Log.Finest($"Loaded record count: {wdbVars.RecordCount}");
+            wdbVars.RecordCountWithSections = wdbVars.RecordCount + 4;
+
+            // Populate !!strtypelist
+            if (headerSection.TryGetValue(WDBVariablesXIII.StrtypelistSectionName, out var strTypelistObj))
+            {
+                wdbVars.StrtypelistValues = strTypelistObj switch
+                {
+                    List<uint> strTypelist => strTypelist,
+                    List<int> strTypelistInt => strTypelistInt.Select(i => (uint)i).ToList(),
+                    _ => wdbVars.StrtypelistValues
+                };
+                wdbVars.StrtypelistData = ConvertUIntListToByteArray(wdbVars.StrtypelistValues);
+            }
+            else
+            {
+                wdbVars.StrtypelistData = [];
+            }
+            Log.Finest($"Loaded strTypeList: {strTypelistObj}");
+            // Populate !!typelist
+            if (headerSection.TryGetValue(WDBVariablesXIII.TypelistSectionName, out var typelistObj))
+            {
+                wdbVars.TypelistValues = typelistObj switch
+                {
+                    List<uint> typelist => typelist,
+                    List<int> typelistInt => typelistInt.Select(i => (uint)i).ToList(),
+                    _ => wdbVars.TypelistValues
+                };
+                wdbVars.TypelistData = ConvertUIntListToByteArray(wdbVars.TypelistValues);
+            }
+            else
+            {
+                wdbVars.TypelistData = [];
+            }
+            Log.Finest($"Loaded typelists: {typelistObj}");
+
+            // Populate !!version
+            if (headerSection.TryGetValue(WDBVariablesXIII.VersionSectionName, out var versionObj))
+            {
+                var version = Convert.ToUInt32(versionObj);
+                wdbVars.VersionData = BitConverter.GetBytes(version);
+                if (BitConverter.IsLittleEndian) Array.Reverse(wdbVars.VersionData);
+            }
+            else
+            {
+                wdbVars.VersionData = new byte[4];
+            }
+
+            // Populate !structitem (Fields)
+            if (headerSection.TryGetValue(WDBVariablesXIII.StructItemSectionName, out var structItemObj))
+            {
+                if (structItemObj is List<string> fieldsList)
+                {
+                    wdbVars.Fields = fieldsList.ToArray();
+                    wdbVars.FieldCount = (uint)wdbVars.Fields.Length;
+                }
+            }
+            
+            // Populate RecordsDataDict
+            wdbVars.RecordsDataDict = new Dictionary<string, List<object>>();
+            foreach (var record in wdbFile.Records)
+            {
+                var recordName = record.ContainsKey(JsonVariables.RecordToken) ? record[JsonVariables.RecordToken].ToString() : "";
+                
+                if (string.IsNullOrEmpty(recordName)) continue;
+
+                var valuesList = new List<object>();
+                if (wdbVars.Fields != null)
+                {
+                    foreach (var field in wdbVars.Fields)
+                    {
+                        if (record.TryGetValue(field, out var val))
+                        {
+                            valuesList.Add(val);
+                        }
+                        else
+                        {
+                            // Handle missing field? Default to 0/null?
+                            Log.Warning($"Field {field} missing in record {recordName}. Defaulting to 0.");
+                            valuesList.Add(0); 
+                        }
+                    }
+                }
+                wdbVars.RecordsDataDict.Add(recordName, valuesList);
+            }
+
+            // Convert Records to Bytes
+            if (wdbVars.Fields is { Length: > 0 })
+            {
+                RecordsConversion.ConvertRecordsWithFields(wdbVars);
+            }
+            else
+            {
+                RecordsConversion.ConvertRecordsNoFields(wdbVars);
+            }
+
+            // Build Strings Data from ProcessedStringsDict (populated by RecordsConversion)
+            BuildStringsSection(wdbVars);
+
+            // Call the original BuildWDB method
+            BuildWDB(wdbVars);
+        }
+
+        private static void BuildStringsSection(WDBVariablesXIII wdbVars)
+        {
+            using (var ms = new MemoryStream())
+            {
+                // Write the empty string (offset 0)
+                ms.WriteByte(0);
+
+                // Write all other strings sorted by their assigned offset
+                foreach (var entry in wdbVars.ProcessedStringsDict.OrderBy(x => x.Value))
+                {
+                    if (string.IsNullOrEmpty(entry.Key)) continue; // Already handled empty string
+
+                    var stringBytes = Encoding.UTF8.GetBytes(entry.Key + "\0");
+                    ms.Write(stringBytes, 0, stringBytes.Length);
+                }
+                wdbVars.StringsData = ms.ToArray();
+            }
+            wdbVars.HasStringSection = wdbVars.StringsData.Length > 1;
+        }
+
+        private static byte[] ConvertUIntListToByteArray(List<uint> list)
+        {
+            if (list.Count == 0) return [];
+
+            var byteArray = new byte[list.Count * 4];
+            for (var i = 0; i < list.Count; i++)
+            {
+                var valBytes = BitConverter.GetBytes(list[i]);
+                if (BitConverter.IsLittleEndian) Array.Reverse(valBytes); // Ensure big-endian as per WDB format
+                Buffer.BlockCopy(valBytes, 0, byteArray, i * 4, 4);
+            }
+            return byteArray;
+        }
+
         public static void BuildWDB(WDBVariablesXIII wdbVars)
         {
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Building wdb file....");
+           Log.Fine("Building wdb file....");
 
             if (File.Exists(wdbVars.WDBFilePath))
             {
@@ -22,21 +184,20 @@ namespace WDBJsonTool.XIII.Conversion
                 outWDBwriter.BaseStream.PadNull(8);
 
                 // string
-                WriteSectionName(outWDBwriter, wdbVars.StringSectionName, wdbVars.StringSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII.StringSectionName, WDBVariablesXIII.StringSectionNameLength);
 
                 // strtypelist
-                WriteSectionName(outWDBwriter, wdbVars.StrtypelistSectionName, wdbVars.StrtypelistSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII.StrtypelistSectionName, WDBVariablesXIII.StrtypelistSectionNameLength);
 
                 // typelist
-                WriteSectionName(outWDBwriter, wdbVars.TypelistSectionName, wdbVars.TypelistSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII.TypelistSectionName, WDBVariablesXIII.TypelistSectionNameLength);
 
                 // version
-                WriteSectionName(outWDBwriter, wdbVars.VersionSectionName, wdbVars.VersionSectionNameLength);
+                WriteSectionName(outWDBwriter, WDBVariablesXIII.VersionSectionName, WDBVariablesXIII.VersionSectionNameLength);
 
                 // record names
-                foreach (var recordName in wdbVars.RecordsDataDict.Keys)
+                foreach (var recordNameBytes in wdbVars.RecordsDataDict.Keys.Select(recordName => Encoding.UTF8.GetBytes(recordName)))
                 {
-                    var recordNameBytes = Encoding.UTF8.GetBytes(recordName);
                     outWDBwriter.Write(recordNameBytes);
 
                     outWDBwriter.BaseStream.PadNull(16 - recordNameBytes.Length);
@@ -121,10 +282,8 @@ namespace WDBJsonTool.XIII.Conversion
 
 
                 // records
-                foreach (var recordkey in wdbVars.OutPerRecordData.Keys)
+                foreach (var currentRecordData in wdbVars.OutPerRecordData.Keys.Select(recordkey => wdbVars.OutPerRecordData[recordkey]))
                 {
-                    var currentRecordData = wdbVars.OutPerRecordData[recordkey];
-
                     outWDBdataWriter.BaseStream.Position = outWDBdataWriter.BaseStream.Length;
                     secPos = (uint)outWDBdataWriter.BaseStream.Position;
                     outWDBdataWriter.Write(currentRecordData);

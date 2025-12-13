@@ -2,13 +2,12 @@
 
 namespace WDBJsonTool.Support
 {
-    internal class SharedMethods
+    internal static class SharedMethods
     {
         public static void ErrorExit(string errorMsg)
         {
-            Console.WriteLine($"Error: {errorMsg}");
-            Console.ReadLine();
-            Environment.Exit(1);
+            Log.Fatal($"Error: {errorMsg}");
+            throw new Exception(errorMsg);
         }
 
 
@@ -43,7 +42,7 @@ namespace WDBJsonTool.Support
             var processList = new List<uint>();
             var dataIndex = 0;
 
-            for (int i = 0; i < dataArray.Length / 4; i++)
+            for (var i = 0; i < dataArray.Length / 4; i++)
             {
                 var currentValue = DeriveUIntFromSectionData(dataArray, dataIndex, true);
                 processList.Add(currentValue);
@@ -58,7 +57,7 @@ namespace WDBJsonTool.Support
         public static string DeriveStringFromArray(byte[] dataArray, int stringOffset)
         {
             var length = 0;
-            for (int s = stringOffset; s < dataArray.Length; s++)
+            for (var s = stringOffset; s < dataArray.Length; s++)
             {
                 if (dataArray[s] == 0)
                 {
@@ -76,7 +75,7 @@ namespace WDBJsonTool.Support
         {
             var foundNumsList = new List<int>();
 
-            for (int i = 1; i < 3; i++)
+            for (var i = 1; i < 3; i++)
             {
                 if (i == 1 && !char.IsDigit(fieldName[i]))
                 {
@@ -89,22 +88,11 @@ namespace WDBJsonTool.Support
                 }
             }
 
-            var foundNumStr = "";
-            foreach (var n in foundNumsList)
-            {
-                foundNumStr += n;
-            }
+            var foundNumStr = foundNumsList.Aggregate("", (current, n) => current + n);
 
-            var hasParsed = int.TryParse(foundNumStr, out int foundNum);
+            var hasParsed = int.TryParse(foundNumStr, out var foundNum);
 
-            if (hasParsed)
-            {
-                return foundNum;
-            }
-            else
-            {
-                return 0;
-            }
+            return hasParsed ? foundNum : 0;
         }
 
 
@@ -142,7 +130,7 @@ namespace WDBJsonTool.Support
             var dataArray = new byte[perValueSize * count];
             var index = 0;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 switch (perValueSize)
                 {
@@ -171,7 +159,7 @@ namespace WDBJsonTool.Support
             var dataArray = new byte[4 * count];
             var index = 0;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var currentVal = BitConverter.GetBytes(uintList[i]);
                 dataArray[index] = currentVal[3];
@@ -189,11 +177,9 @@ namespace WDBJsonTool.Support
         {
             var maxValue = Convert.ToUInt32(new string('1', fieldNum), 2);
 
-            if (value > maxValue)
-            {
-                Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
-                value = 0;
-            }
+            if (value <= maxValue) return;
+            Log.Warning($"Value {value} will be zeroed due to exceeding bit amount");
+            value = 0;
         }
 
 
@@ -206,22 +192,18 @@ namespace WDBJsonTool.Support
 
                 var newValue = valueBinary.BinaryToInt(0, fieldNum);
 
-                if (newValue != value)
-                {
-                    Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
-                    value = 0;
-                }
+                if (newValue == value) return;
             }
             else
             {
                 var maxValue = Convert.ToInt32(new string('1', fieldNum), 2);
 
-                if (value > maxValue)
-                {
-                    Console.WriteLine($"Warning: Value {value} will be zeroed due to exceeding bit amount");
-                    value = 0;
-                }
+                if (value <= maxValue) return;
             }
+
+            Log.Warning($"Value {value} will be zeroed due to exceeding bit amount");
+
+            value = 0;
         }
     }
 }

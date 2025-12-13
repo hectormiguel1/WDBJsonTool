@@ -4,7 +4,7 @@ using WDBJsonTool.Support;
 
 namespace WDBJsonTool.XIII2LR.Conversion
 {
-    internal class JsonDeserializer
+    internal static class JsonDeserializer
     {
         public static void DeserializeData(string inJsonFile, WDBVariablesXIII2LR wdbVars)
         {
@@ -19,12 +19,10 @@ namespace WDBJsonTool.XIII2LR.Conversion
             var jsonReader = new Utf8JsonReader(jsonData, options);
             _ = jsonReader.Read();
 
-            Console.WriteLine("Deserializing main sections....");
-            Console.WriteLine("");
+            Log.Fine("Deserializing main sections....");
             DeserializeMainSections(ref jsonReader, wdbVars);
 
-            Console.WriteLine("Deserializing records....");
-            Console.WriteLine("");
+            Log.Fine("Deserializing records....");
             DeserializeRecords(ref jsonReader, wdbVars);
         }
 
@@ -152,7 +150,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
             wdbVars.FieldCount = (uint)wdbVars.Fields.Length;
             var structItemsList = new List<byte>();
 
-            for (int i = 0; i < wdbVars.FieldCount; i++)
+            for (var i = 0; i < wdbVars.FieldCount; i++)
             {
                 structItemsList.AddRange(Encoding.UTF8.GetBytes(wdbVars.Fields[i] + "\0"));
             }
@@ -166,19 +164,10 @@ namespace WDBJsonTool.XIII2LR.Conversion
 
             // Determine whether there is
             // a string section
-            if (!wdbVars.HasStringSection)
-            {
-                if (wdbVars.StrtypelistValues.Contains(2))
-                {
-                    wdbVars.HasStringSection = true;
-                    wdbVars.RecordCountWithSections++;
-                }
-                else if (wdbVars.HasStrArraySection)
-                {
-                    wdbVars.HasStringSection = true;
-                    wdbVars.RecordCountWithSections++;
-                }
-            }
+            if (wdbVars.HasStringSection) return;
+            if (!wdbVars.StrtypelistValues.Contains(2) && !wdbVars.HasStrArraySection) return;
+            wdbVars.HasStringSection = true;
+            wdbVars.RecordCountWithSections++;
         }
 
 
@@ -190,23 +179,17 @@ namespace WDBJsonTool.XIII2LR.Conversion
             JsonMethods.CheckTokenType("Array", ref jsonReader, JsonVariables.RecordsArrayToken);
 
             var recordName = string.Empty;
-            string fieldName;
 
-            for (int i = 0; i < wdbVars.RecordCount; i++)
+            for (var i = 0; i < wdbVars.RecordCount; i++)
             {
                 // Read start object
                 _ = jsonReader.Read();
 
                 if (jsonReader.TokenType != JsonTokenType.StartObject)
                 {
-                    if (recordName == "")
-                    {
-                        SharedMethods.ErrorExit("The record array does not begin with a valid start object character");
-                    }
-                    else
-                    {
-                        SharedMethods.ErrorExit($"A valid start object character was not present after this record {recordName}");
-                    }
+                    SharedMethods.ErrorExit(recordName == ""
+                        ? "The record array does not begin with a valid start object character"
+                        : $"A valid start object character was not present after this record {recordName}");
                 }
 
                 // Get record name
@@ -215,21 +198,16 @@ namespace WDBJsonTool.XIII2LR.Conversion
 
                 if (jsonReader.TokenType != JsonTokenType.String)
                 {
-                    if (recordName == "")
-                    {
-                        SharedMethods.ErrorExit("The first record's property value does not begin with a valid name");
-                    }
-                    else
-                    {
-                        SharedMethods.ErrorExit($"Invalid property value specified for 'record' property. previous record read was {recordName}");
-                    }
+                    SharedMethods.ErrorExit(recordName == ""
+                        ? "The first record's property value does not begin with a valid name"
+                        : $"Invalid property value specified for 'record' property. previous record read was {recordName}");
                 }
 
                 recordName = jsonReader.GetString();
                 var currentDataList = new List<object>();
 
                 // Get record data
-                for (int f = 0; f < wdbVars.FieldCount; f++)
+                for (var f = 0; f < wdbVars.FieldCount; f++)
                 {
                     _ = jsonReader.Read();
 
@@ -238,7 +216,7 @@ namespace WDBJsonTool.XIII2LR.Conversion
                         SharedMethods.ErrorExit($"Field name PropertyType was invalid. occured when parsing {recordName} data.");
                     }
 
-                    fieldName = jsonReader.GetString();
+                    var fieldName = jsonReader.GetString();
 
                     if (fieldName.StartsWith("s"))
                     {

@@ -8,10 +8,8 @@
 
             JsonDeserializer.DeserializeData(inJsonFile, wdbVars);
 
-            Console.WriteLine("");
-            Console.WriteLine($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
-            Console.WriteLine($"Total records (with sections): {wdbVars.RecordCountWithSections}");
-            Console.WriteLine("");
+            Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}");
+            Log.Info($"Total records (with sections): {wdbVars.RecordCountWithSections}");
 
             wdbVars.WDBFilePath = Path.Combine(Path.GetDirectoryName(inJsonFile), Path.GetFileNameWithoutExtension(inJsonFile) + ".wdb");
 
@@ -24,16 +22,11 @@
                 RecordsConversion.ConvertRecords(wdbVars);
             }
 
-
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Building wdb file....");
+            Log.Info("Building wdb file....");
 
             WDBbuilder.BuildWDB(wdbVars);
-
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("Finished building wdb file for extracted json data");
+            
+            Log.Info("Finished building wdb file for extracted json data");
         }
     }
 }

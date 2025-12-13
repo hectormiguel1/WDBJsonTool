@@ -5,18 +5,17 @@ using WDBJsonTool; // Added
 
 namespace WDBJsonTool.XIII.Extraction
 {
-    internal class SectionsParser
+    internal static class SectionsParser
     {
         public static void MainSections(BinaryReader wdbReader, WDBVariablesXIII wdbVars)
         {
             // Parse main sections
             long currentSectionNamePos = 16;
-            string sectioNameRead;
 
             while (true)
             {
                 wdbReader.BaseStream.Position = currentSectionNamePos;
-                sectioNameRead = wdbReader.ReadBytesString(16, false);
+                var sectioNameRead = wdbReader.ReadBytesString(16, false);
 
                 // Break the loop if its
                 // not a valid "!" section
@@ -26,59 +25,53 @@ namespace WDBJsonTool.XIII.Extraction
                     break;
                 }
 
-                // !!sheetname check
-                if (sectioNameRead == "!!sheetname")
+                switch (sectioNameRead)
                 {
-                    SharedMethods.ErrorExit("Specified WDB file is from XIII-2 or LR. set the gamecode to -ff132 to extract this file.");
-                }
+                    // !!sheetname check
+                    case "!!sheetname":
+                    // !!strArray check
+                    case "!!strArray":
+                        SharedMethods.ErrorExit("Specified WDB file is from XIII-2 or LR. set the gamecode to -ff132 to extract this file.");
+                        break;
+                    // !!string
+                    case WDBVariablesXIII.StringSectionName:
+                        wdbVars.HasStringSection = true;
 
-                // !!strArray check
-                if (sectioNameRead == "!!strArray")
-                {
-                    SharedMethods.ErrorExit("Specified WDB file is from XIII-2 or LR. set the gamecode to -ff132 to extract this file.");
-                }
-
-                // !!string
-                if (sectioNameRead == wdbVars.StringSectionName)
-                {
-                    wdbVars.HasStringSection = true;
-
-                    wdbVars.StringsData = SharedMethods.SaveSectionData(wdbReader, false);
-                    wdbVars.RecordCount--;
-                }
-
-                // !!strtypelist
-                if (sectioNameRead == wdbVars.StrtypelistSectionName)
-                {
-                    wdbVars.StrtypelistData = SharedMethods.SaveSectionData(wdbReader, false);
-
-                    if (wdbVars.StrtypelistData.Length != 0)
+                        wdbVars.StringsData = SharedMethods.SaveSectionData(wdbReader, false);
+                        wdbVars.RecordCount--;
+                        break;
+                    // !!strtypelist
+                    case WDBVariablesXIII.StrtypelistSectionName:
                     {
-                        wdbVars.StrtypelistValues = SharedMethods.GetSectionDataValues(wdbVars.StrtypelistData);
-                        wdbVars.FieldCount = (uint)wdbVars.StrtypelistValues.Count;
+                        wdbVars.StrtypelistData = SharedMethods.SaveSectionData(wdbReader, false);
+
+                        if (wdbVars.StrtypelistData.Length != 0)
+                        {
+                            wdbVars.StrtypelistValues = SharedMethods.GetSectionDataValues(wdbVars.StrtypelistData);
+                            wdbVars.FieldCount = (uint)wdbVars.StrtypelistValues.Count;
+                        }
+
+                        wdbVars.RecordCount--;
+                        break;
                     }
-
-                    wdbVars.RecordCount--;
-                }
-
-                // !!typelist
-                if (sectioNameRead == wdbVars.TypelistSectionName)
-                {
-                    wdbVars.TypelistData = SharedMethods.SaveSectionData(wdbReader, false);
-
-                    if (wdbVars.TypelistData.Length != 0)
+                    // !!typelist
+                    case WDBVariablesXIII.TypelistSectionName:
                     {
-                        wdbVars.TypelistValues = SharedMethods.GetSectionDataValues(wdbVars.TypelistData);
+                        wdbVars.TypelistData = SharedMethods.SaveSectionData(wdbReader, false);
+
+                        if (wdbVars.TypelistData.Length != 0)
+                        {
+                            wdbVars.TypelistValues = SharedMethods.GetSectionDataValues(wdbVars.TypelistData);
+                        }
+
+                        wdbVars.RecordCount--;
+                        break;
                     }
-
-                    wdbVars.RecordCount--;
-                }
-
-                // !!version
-                if (sectioNameRead == wdbVars.VersionSectionName)
-                {
-                    wdbVars.VersionData = SharedMethods.SaveSectionData(wdbReader, false);
-                    wdbVars.RecordCount--;
+                    // !!version
+                    case WDBVariablesXIII.VersionSectionName:
+                        wdbVars.VersionData = SharedMethods.SaveSectionData(wdbReader, false);
+                        wdbVars.RecordCount--;
+                        break;
                 }
 
                 currentSectionNamePos += 32;
@@ -95,30 +88,30 @@ namespace WDBJsonTool.XIII.Extraction
 
         public static WDBSection ParseSectionsToWDBSection(WDBVariablesXIII wdbVars)
         {
-            WDBSection sectionData = new WDBSection();
+            var sectionData = new WDBSection();
 
             sectionData[JsonVariables.RecordCountToken] = wdbVars.RecordCount;
 
-            if (WDBDicts.RecordIDs.ContainsKey(wdbVars.WDBName) && !wdbVars.IgnoreKnown)
+            if (WDBDicts.RecordIDs.Any( (entry) => wdbVars.WDBName.StartsWith(entry.Key)) && !wdbVars.IgnoreKnown)
             {
                 wdbVars.IsKnown = true;
                 sectionData[JsonVariables.IsKnownToken] = wdbVars.IsKnown;
 
-                wdbVars.SheetName = WDBDicts.RecordIDs[wdbVars.WDBName];
-                sectionData[wdbVars.SheetNameSectionName] = wdbVars.SheetName;
+                wdbVars.SheetName = WDBDicts.RecordIDs.Where((entry) =>  wdbVars.WDBName.StartsWith(entry.Key)).First().Value;
+                sectionData[WDBVariablesXIII.SheetNameSectionName] = wdbVars.SheetName;
 
-                Log.Info("");
-                Log.Info("");
+
+
                 Log.Info($"sheetName: {wdbVars.SheetName}");
-                Log.Info("");
-                Log.Info("");
+
+
 
                 wdbVars.FieldCount = (uint)WDBDicts.FieldNames[wdbVars.SheetName].Count;
                 wdbVars.Fields = new string[wdbVars.FieldCount];
 
                 // Write all of the field names 
                 // if the file is fully known
-                for (int sf = 0; sf < wdbVars.FieldCount; sf++)
+                for (var sf = 0; sf < wdbVars.FieldCount; sf++)
                 {
                     var derivedString = WDBDicts.FieldNames[wdbVars.SheetName][sf];
                     wdbVars.Fields[sf] = derivedString;
@@ -131,61 +124,57 @@ namespace WDBJsonTool.XIII.Extraction
 
 
             // Parse and write the strtypelistData
-            List<uint> strtypelistValues = new List<uint>();
+            List<uint> strtypelistValues = [];
 
             var strtypelistIndex = 0;
             var currentStrtypelistData = new byte[4];
             var strTypelistValueCount = wdbVars.StrtypelistData.Length / 4;
-            uint strtypelistValue;
 
-            for (int s = 0; s < strTypelistValueCount; s++)
+            for (var s = 0; s < strTypelistValueCount; s++)
             {
                 Array.ConstrainedCopy(wdbVars.StrtypelistData, strtypelistIndex, currentStrtypelistData, 0, 4);
                 Array.Reverse(currentStrtypelistData);
-                strtypelistValue = BitConverter.ToUInt32(currentStrtypelistData, 0);
+                var strtypelistValue = BitConverter.ToUInt32(currentStrtypelistData, 0);
 
                 wdbVars.StrtypelistValues.Add(strtypelistValue);
                 strtypelistValues.Add(strtypelistValue);
                 strtypelistIndex += 4;
             }
-            sectionData[wdbVars.StrtypelistSectionName] = strtypelistValues;
+            sectionData[WDBVariablesXIII.StrtypelistSectionName] = strtypelistValues;
 
 
             // Write all the typelist data
-            List<int> typelistValues = new List<int>();
+            List<int> typelistValues = [];
 
             var typelistIndex = 0;
             var currentTypelistData = new byte[4];
-            int typelistValue;
 
-            for (int t = 0; t < wdbVars.TypelistData.Length / 4; t++)
+            for (var t = 0; t < wdbVars.TypelistData.Length / 4; t++)
             {
                 Array.ConstrainedCopy(wdbVars.TypelistData, typelistIndex, currentTypelistData, 0, 4);
                 Array.Reverse(currentTypelistData);
-                typelistValue = (int)BitConverter.ToUInt32(currentTypelistData, 0);
+                var typelistValue = (int)BitConverter.ToUInt32(currentTypelistData, 0);
 
                 typelistValues.Add(typelistValue);
                 typelistIndex += 4;
             }
-            sectionData[wdbVars.TypelistSectionName] = typelistValues;
+            sectionData[WDBVariablesXIII.TypelistSectionName] = typelistValues;
 
 
             // Write version data
-            sectionData[wdbVars.VersionSectionName] = SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true);
+            sectionData[WDBVariablesXIII.VersionSectionName] = SharedMethods.DeriveUIntFromSectionData(wdbVars.VersionData, 0, true);
 
 
             // Write fields data
-            if (wdbVars.IsKnown && !wdbVars.IgnoreKnown)
+            if (!wdbVars.IsKnown || wdbVars.IgnoreKnown) return sectionData;
+            List<string> fields = [];
+
+            for (var i = 0; i < wdbVars.FieldCount; i++)
             {
-                List<string> fields = new List<string>();
-
-                for (int i = 0; i < wdbVars.FieldCount; i++)
-                {
-                    fields.Add(wdbVars.Fields[i]);
-                }
-
-                sectionData[wdbVars.StructItemSectionName] = fields;
+                fields.Add(wdbVars.Fields[i]);
             }
+
+            sectionData[WDBVariablesXIII.StructItemSectionName] = fields;
 
             return sectionData;
         }

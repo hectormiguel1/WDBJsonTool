@@ -1,15 +1,16 @@
-﻿public static class StreamHelpers
+﻿using WDBJsonTool;
+
+public static class StreamHelpers
 {
     public static void CopyStreamTo(this Stream inStream, Stream outStream, long size, bool showProgress)
     {
-        int bufferSize = 81920;
-        long amountRemaining = size;
+        const int bufferSize = 81920;
+        var amountRemaining = size;
         long amountCopied = 0;
-        decimal currentAmount;
 
         while (amountRemaining > 0)
         {
-            long arraySize = Math.Min(bufferSize, amountRemaining);
+            var arraySize = Math.Min(bufferSize, amountRemaining);
             var copyArray = new byte[arraySize];
 
             _ = inStream.Read(copyArray, 0, (int)arraySize);
@@ -19,18 +20,16 @@
 
             amountCopied += arraySize;
 
-            if (showProgress)
-            {
-                currentAmount = Math.Round(((decimal)amountCopied / size) * 100);
-                Console.Write("\r{0}", "Copied " + currentAmount + "%");
-            }
+            if (!showProgress) continue;
+            var currentAmount = Math.Round(((decimal)amountCopied / size) * 100);
+            Log.Finest("Copied " + currentAmount + "%");
         }
     }
 
 
     public static void PadNull(this Stream stream, int padAmount)
     {
-        for (int p = 0; p < padAmount; p++)
+        for (var p = 0; p < padAmount; p++)
         {
             stream.WriteByte(0);
         }

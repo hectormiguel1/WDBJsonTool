@@ -1,6 +1,8 @@
 #ifndef WDB_API_H
 #define WDB_API_H
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,20 +71,28 @@ typedef struct WDBFileC {
     int recordCount;
 } WDBFileC;
 
+// GameCode enum matching C# definition
+typedef enum GameCode {
+    ff13 = 0,
+    ff132 = 1
+} GameCode;
+
 
 // API functions (will be defined in the C# library and exported)
-// Function to initialize the WDB parser
-void WDB_Initialize();
-
+    
 // Function to parse a WDB file and return its data
-// Returns 0 on success, -1 on failure
-int WDB_ParseFile(const char* filePath, const char* gameCode, WDBFileC* outWDBFile);
+// Returns Result containing WDBFileC* on success or Error info on failure
+Result WDB_ParseFile(const char* filePath, unsigned char gameCode);
 
 // Function to free memory allocated for a WDBFileC structure
 void WDB_FreeWDBFile(WDBFileC* wdbFile);
 
 // Function to free a string allocated by the library
 void WDB_FreeString(char* str);
+
+// Function to write a WDBFileC structure to a file
+// Returns Result containing success (int 0) or Error info on failure
+Result WDB_WriteFile(const char* filePath, unsigned char gameCode, WDBFileC* wdbFile);
 
 
 #ifdef __cplusplus

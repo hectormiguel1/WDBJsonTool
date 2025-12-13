@@ -11,11 +11,11 @@
         public bool ParseStrtypelistAsV1;
         public bool HasTypelistSection;
         public string[]? Fields;
-        public List<uint> StrArrayOffsets = new();
-        public List<string> NumStringFields = new();
-        public List<string> ProcessStringsList = new();
+        public List<uint> StrArrayOffsets = [];
+        public List<string> NumStringFields = [];
+        public List<string> ProcessStringsList = [];
         public Dictionary<string, List<string>> StrArrayDict = new();
-        public List<int> StrtypelistValues = new();
+        public List<int> StrtypelistValues = [];
         public uint RecordCountWithSections;
         public Dictionary<string, List<object>> RecordsDataDict = new();
         public Dictionary<string, uint> ProcessedStringsDict = new();

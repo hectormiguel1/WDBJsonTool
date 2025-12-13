@@ -6,7 +6,7 @@ using WDBJsonTool; // Added
 
 namespace WDBJsonTool.XIII2LR.Extraction
 {
-    internal class SectionsParser
+    internal abstract class SectionsParser
     {
         public static void MainSections(BinaryReader wdbReader, WDBVariablesXIII2LR wdbVars)
         {
@@ -14,8 +14,8 @@ namespace WDBJsonTool.XIII2LR.Extraction
             long currentSectionNamePos = 16;
             string sectioNameRead;
 
-            wdbVars.StrtypelistData = new byte[] { };
-            wdbVars.StructItemData = new byte[] { };
+            wdbVars.StrtypelistData = [];
+            wdbVars.StructItemData = [];
             wdbVars.FieldCount = 0;
 
 
@@ -121,18 +121,18 @@ namespace WDBJsonTool.XIII2LR.Extraction
                 wdbVars.SheetName = "Not Specified";
             }
 
-            Log.Info(""); // Replaced Console.WriteLine
-            Log.Info(""); // Replaced Console.WriteLine
+
+
             Log.Info($"{wdbVars.SheetNameSectionName}: {wdbVars.SheetName}"); // Replaced Console.WriteLine
-            Log.Info(""); // Replaced Console.WriteLine
-            Log.Info(""); // Replaced Console.WriteLine
+
+
 
 
             // Process !structitem data
             wdbVars.Fields = new string[wdbVars.FieldCount];
             var stringStartPos = 0;
 
-            for (int sf = 0; sf < wdbVars.FieldCount; sf++)
+            for (var sf = 0; sf < wdbVars.FieldCount; sf++)
             {
                 var derivedString = SharedMethods.DeriveStringFromArray(wdbVars.StructItemData, stringStartPos);
 
@@ -155,15 +155,15 @@ namespace WDBJsonTool.XIII2LR.Extraction
 
                 StrArrayParser.ArrangeArrayData(wdbVars);
 
-                Log.Info(""); // Replaced Console.WriteLine
-                Log.Info(""); // Replaced Console.WriteLine
+    
+    
             }
         }
 
 
         public static WDBSection ParseSectionsToWDBSection(WDBVariablesXIII2LR wdbVars)
         {
-            WDBSection sectionData = new WDBSection();
+            var sectionData = new WDBSection();
 
             sectionData[JsonVariables.RecordCountToken] = wdbVars.RecordCount;
             sectionData[wdbVars.SheetNameSectionName] = wdbVars.SheetName;
@@ -183,7 +183,7 @@ namespace WDBJsonTool.XIII2LR.Extraction
             // Parse and write the strtypelistData
             sectionData[JsonVariables.IsStrTypelistV1Token] = wdbVars.ParseStrtypelistAsV1;
 
-            List<int> strtypelistValues = new List<int>(); // Using List<int> to store values
+            List<int> strtypelistValues = []; // Using List<int> to store values
 
             var strtypelistbIndex = 0;
             var currentStrtypelistData = new byte[4];
@@ -191,7 +191,7 @@ namespace WDBJsonTool.XIII2LR.Extraction
             var strTypelistValueCount = wdbVars.ParseStrtypelistAsV1 ? wdbVars.StrtypelistData.Length / 4 : wdbVars.StrtypelistData.Length;
             int strtypelistValue;
 
-            for (int s = 0; s < strTypelistValueCount; s++)
+            for (var s = 0; s < strTypelistValueCount; s++)
             {
                 if (wdbVars.ParseStrtypelistAsV1)
                 {
@@ -223,13 +223,13 @@ namespace WDBJsonTool.XIII2LR.Extraction
             sectionData[JsonVariables.HasTypelistToken] = wdbVars.HasTypelistSection;
             if (wdbVars.HasTypelistSection)
             {
-                List<int> typelistValues = new List<int>(); // Using List<int> to store values
+                List<int> typelistValues = []; // Using List<int> to store values
 
                 var typelistbIndex = 0;
                 var currentTypelistData = new byte[4];
                 int typelistValue;
 
-                for (int t = 0; t < wdbVars.TypelistData.Length / 4; t++)
+                for (var t = 0; t < wdbVars.TypelistData.Length / 4; t++)
                 {
                     Array.ConstrainedCopy(wdbVars.TypelistData, typelistbIndex, currentTypelistData, 0, 4);
                     Array.Reverse(currentTypelistData);
@@ -248,9 +248,9 @@ namespace WDBJsonTool.XIII2LR.Extraction
 
 
             // Write structitem data
-            List<string> fields = new List<string>(); // Using List<string> to store values
+            List<string> fields = []; // Using List<string> to store values
 
-            for (int i = 0; i < wdbVars.FieldCount; i++)
+            for (var i = 0; i < wdbVars.FieldCount; i++)
             {
                 fields.Add(wdbVars.Fields[i]); // Add to the new list
             }

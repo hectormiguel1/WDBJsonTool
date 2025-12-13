@@ -2,7 +2,7 @@
 
 namespace WDBJsonTool.Support
 {
-    internal class JsonMethods
+    internal abstract class JsonMethods
     {
         public static void CheckTokenType(string tokenType, ref Utf8JsonReader jsonReader, string property)
         {
