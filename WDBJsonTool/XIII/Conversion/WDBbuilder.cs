@@ -10,10 +10,12 @@ namespace WDBJsonTool.XIII.Conversion
 
             Log.Fine($"Building wdb file from WDBFile object to {filePath}....");
 
-            var wdbVars = new WDBVariablesXIII();
-            wdbVars.WDBName = wdbFile.WDBName;
-            wdbVars.WDBFilePath = filePath;
-            
+            var wdbVars = new WDBVariablesXIII
+            {
+                WDBName = wdbFile.WDBName,
+                WDBFilePath = filePath
+            };
+
             // Access header section
             if (!wdbFile.Sections.TryGetValue(JsonVariables.HeaderSectionToken, out var headerSection))
             {
@@ -21,7 +23,7 @@ namespace WDBJsonTool.XIII.Conversion
                 return;
             }
             
-            Log.Finest($"Loaded header sections: {headerSection}");
+            Log.Finest($"Loaded header sections: {headerSection.Count}");
             // Populate RecordCount
             if (headerSection.TryGetValue(JsonVariables.RecordCountToken, out var recordCountObj))
             {

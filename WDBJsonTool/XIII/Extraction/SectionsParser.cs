@@ -92,19 +92,15 @@ namespace WDBJsonTool.XIII.Extraction
 
             sectionData[JsonVariables.RecordCountToken] = wdbVars.RecordCount;
 
-            if (WDBDicts.RecordIDs.Any( (entry) => wdbVars.WDBName.StartsWith(entry.Key)) && !wdbVars.IgnoreKnown)
+            if (WDBDicts.RecordIDs.Any( (entry) => wdbVars.WDBName.Equals(entry.Key)) && !wdbVars.IgnoreKnown)
             {
                 wdbVars.IsKnown = true;
                 sectionData[JsonVariables.IsKnownToken] = wdbVars.IsKnown;
 
-                wdbVars.SheetName = WDBDicts.RecordIDs.Where((entry) =>  wdbVars.WDBName.StartsWith(entry.Key)).First().Value;
+                wdbVars.SheetName = WDBDicts.RecordIDs.Where((entry) =>  wdbVars.WDBName.Equals(entry.Key)).First().Value;
                 sectionData[WDBVariablesXIII.SheetNameSectionName] = wdbVars.SheetName;
 
-
-
-                Log.Info($"sheetName: {wdbVars.SheetName}");
-
-
+                Log.Info($"sheetName: {wdbVars.SheetName} for key: {wdbVars.WDBName}" );
 
                 wdbVars.FieldCount = (uint)WDBDicts.FieldNames[wdbVars.SheetName].Count;
                 wdbVars.Fields = new string[wdbVars.FieldCount];
